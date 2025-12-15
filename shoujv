@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武汉市中心 | 倒计时</title>
+    <style>
+        /* --- 基础设置 --- */
+        :root {
+            --bg-color: #080808; /* 近似纯黑，比纯黑更有质感 */
+            --text-color: #e0e0e0; /* 略微灰的白，不刺眼 */
+            --font-stack: "Songti SC", "Noto Serif SC", "SimSun", "Times New Roman", serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-stack);
+            overflow: hidden; /* 禁止滚动，营造定格感 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- 容器布局 --- */
+        .container {
+            text-align: center;
+            opacity: 0; /* 初始隐藏，用于淡入动画 */
+            animation: fadeIn 2.5s ease-out forwards;
+            padding: 20px;
+            max-width: 90%;
+        }
+
+        /* --- 文字样式 --- */
+        .title {
+            font-size: 1.2rem;
+            letter-spacing: 0.3em;
+            margin-bottom: 4vh;
+            font-weight: 300;
+            opacity: 0.8;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* 装饰线，增加仪式感 */
+        .title::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 1px;
+            background: #444;
+            margin: 15px auto 0;
+        }
+
+        .countdown-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .time-unit {
+            font-size: 2.5rem;
+            line-height: 1.2;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+        }
+
+        .unit-label {
+            font-size: 0.8rem;
+            font-style: italic;
+            opacity: 0.5;
+            margin-left: 5px;
+            font-weight: normal;
+        }
+
+        .footer-text {
+            margin-top: 6vh;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            opacity: 0.4;
+        }
+
+        /* --- 动画 --- */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 响应式适配 (手机 vs 电脑) --- */
+        
+        /* 电脑端优化：字体更大，布局更宽 */
+        @media (min-width: 768px) {
+            .title {
+                font-size: 1.8rem;
+                margin-bottom: 6vh;
+            }
+            .time-unit {
+                font-size: 5rem;
+            }
+            .unit-label {
+                font-size: 1.2rem;
+            }
+            .countdown-wrapper {
+                flex-direction: row; /* 电脑端横向排列 */
+                justify-content: center;
+                gap: 40px;
+            }
+            /* 分割线 */
+            .separator {
+                display: block;
+            }
+        }
+
+        /* 手机端优化：保持竖向堆叠，字体适中 */
+        @media (max-width: 767px) {
+            .countdown-wrapper {
+                gap: 2vh;
+            }
+            .title br {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="title">武汉市中心</div>
+        
+        <div class="countdown-wrapper" id="timer">
+            <div class="time-unit">--<span class="unit-label">天</span></div>
+            <div class="time-unit">--<span class="unit-label">时</span></div>
+            <div class="time-unit">--<span class="unit-label">分</span></div>
+            <div class="time-unit">--<span class="unit-label">秒</span></div>
+        </div>
+
+        <div class="footer-text">倒计时 2026.03.06</div>
+    </div>
+
+    <script>
+        function updateTimer() {
+            // 设定目标时间：2026年3月6日 00:00:00
+            const targetDate = new Date("2026-03-06T00:00:00").getTime();
+            const now = new Date().getTime();
+            const difference = targetDate - now;
+
+            const timerElement = document.getElementById('timer');
+
+            if (difference < 0) {
+                // 如果时间到了
+                timerElement.innerHTML = "<div class='time-unit'>已抵达<span class='unit-label'>终点</span></div>";
+                return;
+            }
+
+            // 计算时间单位
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            // 格式化数字（补零，保持视觉整齐）
+            const fHours = hours < 10 ? "0" + hours : hours;
+            const fMinutes = minutes < 10 ? "0" + minutes : minutes;
+            const fSeconds = seconds < 10 ? "0" + seconds : seconds;
+
+            // 构建HTML结构
+            // 手机端竖排，电脑端横排，通过CSS控制
+            timerElement.innerHTML = `
+                <div class="time-unit">${days}<span class="unit-label">天</span></div>
+                <div class="time-unit">${fHours}<span class="unit-label">时</span></div>
+                <div class="time-unit">${fMinutes}<span class="unit-label">分</span></div>
+                <div class="time-unit">${fSeconds}<span class="unit-label">秒</span></div>
+            `;
+        }
+
+        // 立即运行一次，然后每秒更新
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>
