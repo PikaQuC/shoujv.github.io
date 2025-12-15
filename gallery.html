@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>碎片 | 记录</title>
+    <style>
+        /* --- 基础设置 (保持与首页一致) --- */
+        :root {
+            --bg-color: #080808;
+            --text-color: #e0e0e0;
+            --placeholder-color: #1a1a1a; /* 图片未加载时的占位色 */
+            --border-color: #333;
+            --font-stack: "Songti SC", "Noto Serif SC", "SimSun", serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-stack);
+            overflow-x: hidden; /* 防止横向滚动 */
+        }
+
+        /* --- 顶部标题 --- */
+        header {
+            padding: 10vh 20px 5vh;
+            text-align: center;
+            animation: fadeIn 2s ease-out;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.5em;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* --- 画廊容器 --- */
+        .gallery-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            /* 默认两列，自适应宽度 */
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 60px 40px; /* 上下间距60，左右间距40 */
+            opacity: 0;
+            animation: fadeIn 2.5s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        /* --- 图片卡片 --- */
+        .photo-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 图片容器 (预留空间的核心) */
+        .image-box {
+            width: 100%;
+            position: relative;
+            background-color: var(--placeholder-color); /* 没图时显示深灰色 */
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        /* 这种写法可以保持宽高比，防止页面抖动 */
+        /* 4:3 比例 */
+        .ratio-4-3 { padding-top: 75%; } 
+        /* 16:9 比例 */
+        .ratio-16-9 { padding-top: 56.25%; }
+        /* 3:4 竖图比例 */
+        .ratio-3-4 { padding-top: 133%; }
+
+        /* 真实的图片样式 */
+        .image-box img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 保证图片填满盒子且不变形 */
+            opacity: 0.7; /* 默认稍微暗一点，有氛围 */
+            filter: grayscale(100%); /* 核心：强制黑白 */
+            transition: all 0.8s ease;
+        }
+
+        /* 鼠标悬停交互 */
+        .image-box:hover {
+            border-color: #666;
+            transform: translateY(-5px); /* 微微上浮 */
+        }
+
+        .image-box:hover img {
+            opacity: 1;
+            filter: grayscale(0%); /* 悬停时恢复彩色 (或者改成 50% 保持低饱和) */
+            transform: scale(1.05); /* 微微放大 */
+        }
+
+        /* --- 图片下方的文字 --- */
+        .caption {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #888;
+            letter-spacing: 0.1em;
+            text-align: center;
+        }
+
+        /* --- 底部返回按钮 --- */
+        footer {
+            padding: 10vh 0;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 2s ease-out forwards;
+            animation-delay: 1s;
+        }
+
+        .back-btn {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        /* --- 动画 --- */
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* --- 手机端适配 --- */
+        @media (max-width: 768px) {
+            .gallery-container {
+                grid-template-columns: 1fr; /* 手机端改为单列 */
+                gap: 50px;
+                padding: 20px 40px;
+            }
+            
+            h1 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>零 碎 片 段</h1>
+        <div class="subtitle">Fragments of Time</div>
+    </header>
+
+    <div class="gallery-container">
+        
+        <div class="photo-card">
+            <div class="image-box ratio-4-3">
+                <img src="" alt="等待填充"> 
+            </div>
+            <div class="caption">无题 · 壹</div>
+        </div>
+
+        <div class="photo-card">
+            <div class="image-box ratio-3-4">
+                <img src="" alt="等待填充">
+            </div>
+            <div class="caption">某年某月 · 街头</div>
+        </div>
+
+        <div class="photo-card">
+            <div class="image-box ratio-16-9">
+                <img src="" alt="等待填充">
+            </div>
+            <div class="caption">过客</div>
+        </div>
+
+        <div class="photo-card">
+            <div class="image-box ratio-4-3">
+                <img src="" alt="等待填充">
+            </div>
+            <div class="caption">静止</div>
+        </div>
+
+    </div>
+
+    <footer>
+        <a href="index.html" class="back-btn">返回倒计时</a>
+    </footer>
+
+</body>
+</html>
