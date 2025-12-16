@@ -1,217 +1,278 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>武汉市中心 | 倒计时</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['"Noto Serif SC"', '"Songti SC"', 'SimSun', 'serif'],
+            },
+            colors: {
+              background: '#080808',
+              foreground: '#e0e0e0',
+            }
+          }
+        }
+      }
+    </script>
     <style>
-        /* --- 基础设置 --- */
-        :root {
-            --bg-color: #080808; /* 近似纯黑，比纯黑更有质感 */
-            --text-color: #e0e0e0; /* 略微灰的白，不刺眼 */
-            --font-stack: "Songti SC", "Noto Serif SC", "SimSun", "Times New Roman", serif;
-        }
+      body {
+        background-color: #080808;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* 防止光晕导致滚动条 */
+        color: #e0e0e0;
+        font-family: "Noto Serif SC", serif;
+      }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+      /* --- 背景噪点 & 聚光灯 --- */
+      .bg-noise {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.03;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      }
 
-        body, html {
-            height: 100%;
-            width: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-stack);
-            overflow: hidden; /* 禁止滚动，营造定格感 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+      .spotlight {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 2;
+        /* 默认中心，JS更新变量 */
+        background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.07), transparent 40%);
+        opacity: 0.8;
+      }
 
-        /* --- 容器布局 --- */
-        .container {
-            text-align: center;
-            opacity: 0; /* 初始隐藏，用于淡入动画 */
-            animation: fadeIn 2.5s ease-out forwards;
-            padding: 20px;
-            max-width: 90%;
-        }
+      /* --- 动画关键帧 --- */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
 
-        /* --- 文字样式 --- */
-        .title {
-            font-size: 1.2rem;
-            letter-spacing: 0.3em;
-            margin-bottom: 4vh;
-            font-weight: 300;
-            opacity: 0.8;
-            position: relative;
-            display: inline-block;
-        }
+      @keyframes expandLine {
+        from { opacity: 0; transform: scaleX(0); }
+        to { opacity: 0.4; transform: scaleX(1); }
+      }
 
-        /* 装饰线，增加仪式感 */
-        .title::after {
-            content: '';
-            display: block;
-            width: 40px;
-            height: 1px;
-            background: #444;
-            margin: 15px auto 0;
-        }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
 
-        .countdown-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+      /* 动画辅助类 */
+      .animate-fade-up { opacity: 0; animation: fadeInUp 1s ease-out forwards; }
+      .animate-line { opacity: 0; animation: expandLine 1.2s ease-in-out forwards; }
+      .animate-fade { opacity: 0; animation: fadeIn 1s ease-out forwards; }
 
-        .time-unit {
-            font-size: 2.5rem;
-            line-height: 1.2;
-            font-weight: bold;
-            letter-spacing: 0.05em;
-        }
+      /* --- 交互特效类 --- */
+      
+      /* 标题发光 */
+      .title-hover {
+        transition: all 0.7s ease-out;
+      }
+      .title-hover:hover {
+        transform: scale(1.05);
+        color: white;
+        text-shadow: 0 0 25px rgba(255,255,255,0.4);
+      }
 
-        .unit-label {
-            font-size: 0.8rem;
-            font-style: italic;
-            opacity: 0.5;
-            margin-left: 5px;
-            font-weight: normal;
-        }
+      /* 数字发光 */
+      .timer-unit {
+        transition: all 0.5s ease-out;
+      }
+      .timer-unit:hover {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));
+      }
+      .timer-unit:hover .num-text { color: white; }
+      .timer-unit:hover .label-text { color: rgba(255,255,255,0.7); }
 
-        .footer-text {
-            margin-top: 6vh;
-            font-size: 0.9rem;
-            letter-spacing: 0.1em;
-            opacity: 0.4;
-        }
+      /* --- 幽灵按钮样式 (Ghost Button) --- */
+      .ghost-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 32px;
+        margin-top: 3rem; /* mt-12 */
+        font-size: 0.8rem; /* text-xs/sm */
+        letter-spacing: 0.25em;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: transparent;
+        transition: all 0.5s ease-out;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
 
-        /* --- 动画 --- */
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+      /* 按钮悬停 */
+      .ghost-btn:hover {
+        border-color: rgba(255, 255, 255, 0.8);
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 35px rgba(255, 255, 255, 0.25);
+        transform: scale(1.1);
+      }
+      .ghost-btn:active { transform: scale(0.95); }
 
-        /* --- 响应式适配 (手机 vs 电脑) --- */
-        
-        /* 电脑端优化：字体更大，布局更宽 */
-        @media (min-width: 768px) {
-            .title {
-                font-size: 1.8rem;
-                margin-bottom: 6vh;
-            }
-            .time-unit {
-                font-size: 5rem;
-            }
-            .unit-label {
-                font-size: 1.2rem;
-            }
-            .countdown-wrapper {
-                flex-direction: row; /* 电脑端横向排列 */
-                justify-content: center;
-                gap: 40px;
-            }
-            /* 分割线 */
-            .separator {
-                display: block;
-            }
-        }
-
-        /* 手机端优化：保持竖向堆叠，字体适中 */
-        @media (max-width: 767px) {
-            .countdown-wrapper {
-                gap: 2vh;
-            }
-            .title br {
-                display: none;
-            }
-        }
-
-                /* --- 幽灵按钮样式 --- */
-        .ghost-btn {
-            display: inline-block;
-            margin-top: 3vh; /* 与上方文字拉开距离 */
-            padding: 8px 24px;
-            
-            /* 极简线条风格 */
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            color: rgba(255, 255, 255, 0.4); 
-            
-            text-decoration: none; /* 去掉下划线 */
-            font-size: 0.8rem;
-            letter-spacing: 0.2em; /* 字间距拉大，增加呼吸感 */
-            transition: all 0.6s ease; /* 缓慢的过渡动画 */
-        }
-
-        /* 鼠标悬停时的效果 */
-        .ghost-btn:hover {
-            border-color: rgba(255, 255, 255, 0.9);
-            color: rgba(255, 255, 255, 1);
-            background-color: rgba(255, 255, 255, 0.05); /* 微微发亮 */
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); /* 柔和的光晕 */
-        }
-
+      /* 箭头动画 */
+      .arrow-wrapper {
+        width: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateX(-8px);
+        transition: all 0.5s ease-out;
+        display: flex;
+        align-items: center;
+      }
+      .ghost-btn:hover .arrow-wrapper {
+        width: 14px;
+        margin-left: 8px;
+        opacity: 1;
+        transform: translateX(0);
+      }
     </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "framer-motion": "https://esm.sh/framer-motion@^12.23.26",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+  }
+}
+</script>
 </head>
-<body>
+  <body>
 
-    <div class="container">
-        <div class="title">武汉市中心</div>
-        
-        <div class="countdown-wrapper" id="timer">
-            <div class="time-unit">--<span class="unit-label">天</span></div>
-            <div class="time-unit">--<span class="unit-label">时</span></div>
-            <div class="time-unit">--<span class="unit-label">分</span></div>
-            <div class="time-unit">--<span class="unit-label">秒</span></div>
-        </div>
+    <!-- 背景层 -->
+    <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent opacity-40 blur-3xl z-0"></div>
+    <div class="bg-noise"></div>
+    <div class="spotlight"></div>
 
-        <div class="footer-text">倒计时 2026.03.06</div>
+    <!-- 主内容区 -->
+    <div class="relative z-20 min-h-screen flex flex-col justify-center items-center text-center px-6 py-12">
+      
+      <!-- 标题部分 -->
+      <div class="mb-12 md:mb-20">
+        <h1 class="animate-fade-up title-hover text-2xl md:text-4xl tracking-[0.4em] md:tracking-[0.5em] font-light text-white/90 ml-[0.2em] cursor-default" style="animation-delay: 0.2s;">
+          武汉市中心
+        </h1>
+        <div class="animate-line h-[1px] w-12 bg-white mx-auto mt-6" style="animation-delay: 0.5s;"></div>
+      </div>
 
-        <a href="https://pikaquc.github.io/shoujv.github.io/gallery.html" class="ghost-btn" target="_blank">进入他处</a>
+      <!-- 倒计时部分 -->
+      <div id="countdown-container" class="animate-fade-up flex flex-col md:flex-row items-center gap-6 md:gap-4" style="animation-delay: 0.8s;">
+        <!-- JS 动态填充 -->
+        <div class="text-white/40">Loading...</div> 
+      </div>
+
+      <!-- Footer 文本 -->
+      <div class="animate-fade mt-16 text-xs md:text-sm tracking-[0.2em] text-white/30" style="animation-delay: 1.2s;">
+        TARGET 2026.03.06
+      </div>
+
+      <!-- 按钮 -->
+      <div class="animate-fade" style="animation-delay: 1.5s;">
+        <a href="gallery.html" class="ghost-btn group">
+          <span>进入他处</span>
+          <span class="arrow-wrapper">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </span>
+        </a>
+      </div>
 
     </div>
 
     <script>
-        function updateTimer() {
-            // 设定目标时间：2026年3月6日 00:00:00
-            const targetDate = new Date("2026-03-06T00:00:00").getTime();
-            const now = new Date().getTime();
-            const difference = targetDate - now;
+      // --- 配置 ---
+      const TARGET_DATE = new Date("2026-03-06T00:00:00").getTime();
 
-            const timerElement = document.getElementById('timer');
+      // --- 聚光灯逻辑 ---
+      document.addEventListener('mousemove', (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        document.body.style.setProperty('--mouse-x', `${x}px`);
+        document.body.style.setProperty('--mouse-y', `${y}px`);
+      });
 
-            if (difference < 0) {
-                // 如果时间到了
-                timerElement.innerHTML = "<div class='time-unit'>已抵达<span class='unit-label'>终点</span></div>";
-                return;
-            }
+      // --- 倒计时逻辑 ---
+      function formatNumber(num) {
+        return num < 10 ? `0${num}` : `${num}`;
+      }
 
-            // 计算时间单位
-            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      function updateTimer() {
+        const now = new Date().getTime();
+        const difference = TARGET_DATE - now;
+        const container = document.getElementById('countdown-container');
 
-            // 格式化数字（补零，保持视觉整齐）
-            const fHours = hours < 10 ? "0" + hours : hours;
-            const fMinutes = minutes < 10 ? "0" + minutes : minutes;
-            const fSeconds = seconds < 10 ? "0" + seconds : seconds;
+        if (difference > 0) {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+          const minutes = Math.floor((difference / 1000 / 60) % 60);
+          const seconds = Math.floor((difference / 1000) % 60);
 
-            // 构建HTML结构
-            // 手机端竖排，电脑端横排，通过CSS控制
-            timerElement.innerHTML = `
-                <div class="time-unit">${days}<span class="unit-label">天</span></div>
-                <div class="time-unit">${fHours}<span class="unit-label">时</span></div>
-                <div class="time-unit">${fMinutes}<span class="unit-label">分</span></div>
-                <div class="time-unit">${fSeconds}<span class="unit-label">秒</span></div>
-            `;
+          // 构建 HTML 结构 (包含悬停特效类)
+          const createUnit = (val, label) => `
+            <div class="timer-unit flex flex-col items-center justify-center min-w-[80px] md:min-w-[120px] cursor-default group">
+              <span class="num-text text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-foreground tracking-tight leading-none tabular-nums transition-colors duration-300">
+                ${val}
+              </span>
+              <span class="label-text text-xs md:text-sm font-serif text-white/40 italic mt-2 uppercase tracking-widest transition-colors duration-300">
+                ${label}
+              </span>
+            </div>
+          `;
+
+          const separator = `<span class="hidden md:block text-4xl md:text-6xl text-white/10 font-light px-2 -mt-4 select-none">:</span>`;
+
+          container.innerHTML = `
+            ${createUnit(days, '天')}
+            ${separator}
+            ${createUnit(formatNumber(hours), '时')}
+            ${separator}
+            ${createUnit(formatNumber(minutes), '分')}
+            ${separator}
+            ${createUnit(formatNumber(seconds), '秒')}
+          `;
+        } else {
+          // 时间到
+          container.innerHTML = `
+            <div class="flex flex-col items-center hover:scale-105 transition-transform duration-700">
+               <span class="text-3xl md:text-5xl font-serif text-white/80 tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                  已抵达
+               </span>
+               <span class="text-sm font-serif text-white/40 mt-4 tracking-[0.3em]">
+                  终点
+               </span>
+            </div>
+          `;
         }
+      }
 
-        // 立即运行一次，然后每秒更新
-        updateTimer();
-        setInterval(updateTimer, 1000);
+      // 启动倒计时
+      setInterval(updateTimer, 1000);
+      updateTimer(); // 立即执行一次
     </script>
-</body>
+  </body>
 </html>
