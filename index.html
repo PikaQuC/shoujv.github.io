@@ -93,6 +93,7 @@
       /* 数字发光 */
       .timer-unit {
         transition: all 0.5s ease-out;
+        will-change: transform, filter; /* 优化性能 */
       }
       .timer-unit:hover {
         transform: scale(1.1);
@@ -207,6 +208,7 @@
     <script>
       // --- 配置 ---
       const TARGET_DATE = new Date("2026-03-06T00:00:00").getTime();
+      let isTimerInitialized = false;
 
       // --- 聚光灯逻辑 ---
       document.addEventListener('mousemove', (e) => {
@@ -232,29 +234,38 @@
           const minutes = Math.floor((difference / 1000 / 60) % 60);
           const seconds = Math.floor((difference / 1000) % 60);
 
-          // 构建 HTML 结构 (包含悬停特效类)
-          const createUnit = (val, label) => `
-            <div class="timer-unit flex flex-col items-center justify-center min-w-[80px] md:min-w-[120px] cursor-default group">
-              <span class="num-text text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-foreground tracking-tight leading-none tabular-nums transition-colors duration-300">
-                ${val}
-              </span>
-              <span class="label-text text-xs md:text-sm font-serif text-white/40 italic mt-2 uppercase tracking-widest transition-colors duration-300">
-                ${label}
-              </span>
-            </div>
-          `;
+          // 核心修改：只初始化一次 HTML 结构，之后只更新数字
+          if (!isTimerInitialized) {
+              const createUnit = (id, label) => `
+                <div class="timer-unit flex flex-col items-center justify-center min-w-[80px] md:min-w-[120px] cursor-default group">
+                  <span id="${id}" class="num-text text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-foreground tracking-tight leading-none tabular-nums transition-colors duration-300">
+                    --
+                  </span>
+                  <span class="label-text text-xs md:text-sm font-serif text-white/40 italic mt-2 uppercase tracking-widest transition-colors duration-300">
+                    ${label}
+                  </span>
+                </div>
+              `;
+              const separator = `<span class="hidden md:block text-4xl md:text-6xl text-white/10 font-light px-2 -mt-4 select-none">:</span>`;
 
-          const separator = `<span class="hidden md:block text-4xl md:text-6xl text-white/10 font-light px-2 -mt-4 select-none">:</span>`;
+              container.innerHTML = `
+                ${createUnit('t-days', '天')}
+                ${separator}
+                ${createUnit('t-hours', '时')}
+                ${separator}
+                ${createUnit('t-minutes', '分')}
+                ${separator}
+                ${createUnit('t-seconds', '秒')}
+              `;
+              isTimerInitialized = true;
+          }
 
-          container.innerHTML = `
-            ${createUnit(days, '天')}
-            ${separator}
-            ${createUnit(formatNumber(hours), '时')}
-            ${separator}
-            ${createUnit(formatNumber(minutes), '分')}
-            ${separator}
-            ${createUnit(formatNumber(seconds), '秒')}
-          `;
+          // 直接更新文本内容，不破坏 DOM 节点，保持 Hover 状态
+          document.getElementById('t-days').textContent = days;
+          document.getElementById('t-hours').textContent = formatNumber(hours);
+          document.getElementById('t-minutes').textContent = formatNumber(minutes);
+          document.getElementById('t-seconds').textContent = formatNumber(seconds);
+
         } else {
           // 时间到
           container.innerHTML = `
