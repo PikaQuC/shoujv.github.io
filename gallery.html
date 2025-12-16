@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>碎片 | 记录</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 基础设置 (保持与首页一致) --- */
+        /* --- 基础设置 --- */
         :root {
             --bg-color: #080808;
             --text-color: #e0e0e0;
-            --placeholder-color: #1a1a1a; /* 图片未加载时的占位色 */
+            --placeholder-color: #1a1a1a;
             --border-color: #333;
             --font-stack: "Songti SC", "Noto Serif SC", "SimSun", serif;
         }
@@ -20,11 +23,36 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: var(--font-stack);
-            overflow-x: hidden; /* 防止横向滚动 */
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- 背景噪点 & 聚光灯 --- */
+        .bg-noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .spotlight {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            /* 默认位置居中，JS会更新位置 */
+            background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.07), transparent 40%);
+            opacity: 0.8;
+            transition: opacity 0.5s ease;
         }
 
         /* --- 顶部标题 --- */
         header {
+            position: relative;
+            z-index: 10;
             padding: 10vh 20px 5vh;
             text-align: center;
             animation: fadeIn 2s ease-out;
@@ -35,24 +63,33 @@
             font-weight: 300;
             letter-spacing: 0.5em;
             margin-bottom: 10px;
-            opacity: 0.8;
+            opacity: 0.9;
+            transition: all 0.7s ease;
+        }
+        
+        h1:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 25px rgba(255,255,255,0.4);
+            color: #fff;
         }
 
         .subtitle {
             font-size: 0.8rem;
             color: #666;
             font-style: italic;
+            letter-spacing: 0.1em;
         }
 
         /* --- 画廊容器 --- */
         .gallery-container {
+            position: relative;
+            z-index: 10;
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
             display: grid;
-            /* 默认两列，自适应宽度 */
             grid-template-columns: repeat(2, 1fr); 
-            gap: 60px 40px; /* 上下间距60，左右间距40 */
+            gap: 60px 40px;
             opacity: 0;
             animation: fadeIn 2.5s ease-out forwards;
             animation-delay: 0.5s;
@@ -63,62 +100,65 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            perspective: 1000px; /* 增加一点透视感 */
         }
 
-        /* 图片容器 (预留空间的核心) */
         .image-box {
             width: 100%;
             position: relative;
-            background-color: var(--placeholder-color); /* 没图时显示深灰色 */
+            background-color: var(--placeholder-color);
             border: 1px solid var(--border-color);
             overflow: hidden;
-            transition: all 0.5s ease;
+            transition: all 0.5s ease-out;
+            cursor: pointer;
         }
 
-        /* 这种写法可以保持宽高比，防止页面抖动 */
-        /* 4:3 比例 */
+        /* 比例类 */
         .ratio-4-3 { padding-top: 75%; } 
-        /* 16:9 比例 */
         .ratio-16-9 { padding-top: 56.25%; }
-        /* 3:4 竖图比例 */
         .ratio-3-4 { padding-top: 133%; }
 
-        /* 真实的图片样式 */
         .image-box img {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* 保证图片填满盒子且不变形 */
-            opacity: 0.7; /* 默认稍微暗一点，有氛围 */
-            filter: grayscale(100%); /* 核心：强制黑白 */
-            transition: all 0.8s ease;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            filter: grayscale(100%);
+            transition: all 0.7s ease;
         }
 
-        /* 鼠标悬停交互 */
+        /* 悬停交互：发光 + 放大 */
         .image-box:hover {
-            border-color: #666;
-            transform: translateY(-5px); /* 微微上浮 */
+            border-color: rgba(255,255,255,0.6);
+            transform: scale(1.03) translateY(-5px);
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            z-index: 10;
         }
 
         .image-box:hover img {
             opacity: 1;
-            filter: grayscale(0%); /* 悬停时恢复彩色 (或者改成 50% 保持低饱和) */
-            transform: scale(1.05); /* 微微放大 */
+            filter: grayscale(0%);
+            transform: scale(1.1);
         }
 
-        /* --- 图片下方的文字 --- */
         .caption {
             margin-top: 15px;
             font-size: 0.85rem;
-            color: #888;
-            letter-spacing: 0.1em;
+            color: #666;
+            letter-spacing: 0.15em;
             text-align: center;
+            transition: color 0.3s;
+        }
+        
+        .photo-card:hover .caption {
+            color: #aaa;
         }
 
-        /* --- 底部返回按钮 --- */
+        /* --- 底部返回按钮 (Ghost Button Style) --- */
         footer {
+            position: relative;
+            z-index: 10;
             padding: 10vh 0;
             text-align: center;
             opacity: 0;
@@ -126,38 +166,76 @@
             animation-delay: 1s;
         }
 
-        .back-btn {
-            color: #666;
+        /* 幽灵按钮核心样式 */
+        .ghost-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 32px;
+            font-size: 0.8rem; /* 约等于 text-xs/sm */
+            letter-spacing: 0.25em;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
             text-decoration: none;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #333;
-            padding-bottom: 5px;
-            transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
 
-        .back-btn:hover {
+        /* 悬停状态：发光、放大、变亮 */
+        .ghost-btn:hover {
+            border-color: rgba(255, 255, 255, 0.8);
             color: #fff;
-            border-color: #fff;
+            background-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 35px rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+        
+        .ghost-btn:active {
+            transform: scale(0.95);
         }
 
-        /* --- 动画 --- */
+        /* 箭头容器：默认宽度0，隐藏 */
+        .arrow-wrapper {
+            width: 0;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateX(-5px);
+            transition: all 0.5s ease-out;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 悬停时：展开宽度，显示箭头 */
+        .ghost-btn:hover .arrow-wrapper {
+            width: 14px;
+            margin-left: 8px;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* 动画关键帧 */
         @keyframes fadeIn {
             to { opacity: 1; }
         }
 
-        /* --- 手机端适配 --- */
         @media (max-width: 768px) {
             .gallery-container {
-                grid-template-columns: 1fr; /* 手机端改为单列 */
+                grid-template-columns: 1fr;
                 gap: 50px;
                 padding: 20px 40px;
             }
-            
             h1 { font-size: 1.2rem; }
         }
     </style>
 </head>
 <body>
+
+    <!-- 背景层 -->
+    <div class="bg-noise"></div>
+    <!-- 聚光灯层 -->
+    <div class="spotlight"></div>
 
     <header>
         <h1>零 碎 片 段</h1>
@@ -197,8 +275,27 @@
     </div>
 
     <footer>
-        <a href="index.html" class="back-btn">返回倒计时</a>
+        <a href="index.html" class="ghost-btn">
+            <span>返回倒计时</span>
+            <span class="arrow-wrapper">
+                <!-- SVG Arrow Right -->
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </span>
+        </a>
     </footer>
 
+    <script>
+        // 简单的鼠标追踪逻辑，更新 CSS 变量
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            // 更新 body 的 CSS 变量，供 .spotlight 使用
+            document.body.style.setProperty('--mouse-x', x + 'px');
+            document.body.style.setProperty('--mouse-y', y + 'px');
+        });
+    </script>
 </body>
 </html>
