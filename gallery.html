@@ -9,10 +9,7 @@
         :root {
             --bg-color: #111;
             --text-color: #e0e0e0;
-            
-            /* 🔥 修改点 1：调大光圈半径 (原150px -> 250px) */
-            --spotlight-size: 250px; 
-            
+            --spotlight-size: 250px; /* 电脑端光圈大小 */
             --mouse-x: 50vw; 
             --mouse-y: 50vh;
         }
@@ -23,42 +20,34 @@
             color: var(--text-color);
             font-family: "Songti SC", serif;
             overflow-x: hidden;
-            cursor: none; /* 隐藏鼠标 */
-            
-            /* ❌ 删除了之前的 transform: translateZ(0); 修复跟随BUG */
+            cursor: none; /* 电脑端隐藏鼠标 */
             min-height: 100vh;
         }
 
-        /* --- 2. 黑暗遮罩层 (修复版) --- */
+        /* --- 2. 黑暗遮罩层 (仅电脑端显示) --- */
         .spotlight-overlay {
-            position: fixed; /* 恢复正常的固定定位 */
-            top: 0; left: 0; width: 100%; height: 100vh; /* 强制占满视口 */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
             pointer-events: none;
             z-index: 100;
-            
-            /* 径向渐变：中间透明 -> 边缘黑色 */
             background: radial-gradient(
                 circle var(--spotlight-size) at var(--mouse-x) var(--mouse-y), 
                 transparent 0%, 
                 rgba(0, 0, 0, 0.96) 100%
             );
-            
-            /* 单独给遮罩层开启硬件加速，不影响父级 */
-            will-change: background; 
+            will-change: background;
         }
 
-        /* --- 3. 放大镜边框 --- */
+        /* --- 3. 放大镜边框 (仅电脑端显示) --- */
         .magnifier-rim {
             position: fixed;
             top: 0; left: 0;
-            /* 边框大小随光圈变量自动调整 */
             width: calc(var(--spotlight-size) * 2);
             height: calc(var(--spotlight-size) * 2);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             pointer-events: none;
             z-index: 101;
-            /* 居中计算 */
             transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%));
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1);
         }
@@ -79,7 +68,7 @@
         }
         h1 { letter-spacing: 0.5em; font-weight: 300; font-size: 2rem; opacity: 0.5; }
 
-        /* --- 5. 卡片布局 --- */
+        /* --- 5. 卡片布局 (电脑端默认) --- */
         .board-container {
             position: relative;
             max-width: 1400px;
@@ -99,19 +88,28 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
             transition: transform 0.3s ease-out, filter 0.3s ease;
             
-            /* 默认全黑白且很暗 */
+            /* 电脑端默认：黑暗模式 */
             filter: brightness(0.3) grayscale(100%);
         }
 
+        /* 电脑端错落布局 */
         .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 5%; transform: rotate(-3deg); }
         .clue-card:nth-child(even) { align-self: flex-end; margin-right: 5%; transform: rotate(2deg); margin-top: 50px; }
         .clue-card:nth-child(3) { align-self: center; transform: rotate(1deg); margin-left: 0; margin-right: 0; }
 
-        /* 交互：变亮 + 放大 */
-        .clue-card:hover, .clue-card.mobile-focus {
+        /* 交互：悬停变亮 */
+        .clue-card:hover {
             transform: scale(1.1) rotate(0deg) !important; 
             z-index: 50;
             filter: brightness(1) grayscale(0%);
+        }
+
+        /* 手机点击激活样式 */
+        .clue-card.mobile-active {
+            filter: brightness(1) grayscale(0%); /* 恢复彩色 */
+            transform: scale(1.05) !important;
+            z-index: 50;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
         }
 
         .photo-area {
@@ -124,7 +122,7 @@
             position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
             width: 16px; height: 16px; background: #555; border-radius: 50%; z-index: 10;
         }
-        .clue-card:hover .pin, .clue-card.mobile-focus .pin { background-color: #ff3333; box-shadow: 0 0 15px #ff3333; }
+        .clue-card:hover .pin, .clue-card.mobile-active .pin { background-color: #ff3333; box-shadow: 0 0 15px #ff3333; }
 
         .note {
             margin-top: 20px; color: #222; font-family: "Courier New", monospace;
@@ -140,20 +138,52 @@
             backdrop-filter: blur(5px); cursor: pointer;
         }
 
-        /* --- 6. 手机适配 --- */
+        /* --- 6. 📱 手机适配 (核心修改) --- */
         @media (max-width: 768px) {
-            :root { 
-                /* 手机上稍微小一点，不然遮住整个屏幕了 */
-                --spotlight-size: 150px; 
-            }
+            /* 1. 恢复鼠标指针 */
             body { cursor: auto; }
             
-            .board-container { align-items: center; gap: 100px; padding-bottom: 120px; }
-            .clue-card { width: 85%; margin: 0 !important; }
-            .photo-area { height: 220px; }
+            /* 2. 隐藏放大镜和遮罩 */
+            .spotlight-overlay, .magnifier-rim { display: none; }
             
-            /* 手机默认稍亮 */
-            .clue-card { filter: brightness(0.5) grayscale(100%); } 
+            /* 3. 布局调整 */
+            .board-container { 
+                gap: 120px; /* 间距缩小 */
+                padding-bottom: 120px;
+                padding-top: 50px;
+            }
+            
+            .clue-card { 
+                width: 75%; /* 卡片不要太宽，留出左右错落的空间 */
+                
+                /* 🔥 核心：手机端默认可见，只是黑白 */
+                filter: brightness(0.9) grayscale(100%); 
+            }
+
+            .photo-area { height: 200px; }
+
+            /* 🔥 核心：手机端错落排列 (Zig-zag) */
+            /* 奇数在左 */
+            .clue-card:nth-child(odd) { 
+                align-self: flex-start; 
+                margin-left: 20px; 
+                margin-right: 0;
+                transform: rotate(-2deg); 
+            }
+            /* 偶数在右 */
+            .clue-card:nth-child(even) { 
+                align-self: flex-end; 
+                margin-right: 20px; 
+                margin-left: 0;
+                transform: rotate(2deg); 
+                margin-top: 0; /* 重置电脑端的 margin-top */
+            }
+            /* 第三个也不要居中，跟随奇数规则 */
+            .clue-card:nth-child(3) {
+                align-self: flex-start;
+                margin-left: 20px;
+                transform: rotate(-1deg);
+            }
         }
     </style>
 </head>
@@ -184,45 +214,40 @@
 
     <script>
         const root = document.documentElement;
-        const cards = document.querySelectorAll('.clue-card');
-
-        // 通用更新函数
-        function updateSpotlight(x, y) {
-            root.style.setProperty('--mouse-x', x + 'px');
-            root.style.setProperty('--mouse-y', y + 'px');
-        }
-
-        // 电脑端
+        
+        // 电脑端：鼠标移动更新放大镜
         document.addEventListener('mousemove', (e) => {
-            updateSpotlight(e.clientX, e.clientY);
+            // 只有在屏幕宽度大于768px时才计算，节省手机性能
+            if (window.innerWidth > 768) {
+                root.style.setProperty('--mouse-x', e.clientX + 'px');
+                root.style.setProperty('--mouse-y', e.clientY + 'px');
+            }
         });
 
-        // 手机端 - 触摸移动
-        document.addEventListener('touchmove', (e) => {
-            const touch = e.touches[0];
-            updateSpotlight(touch.clientX, touch.clientY);
-            checkMobileFocus(touch.clientX, touch.clientY);
-        }, { passive: true });
-
-        // 手机端 - 触摸开始
-        document.addEventListener('touchstart', (e) => {
-             const touch = e.touches[0];
-             updateSpotlight(touch.clientX, touch.clientY);
-             checkMobileFocus(touch.clientX, touch.clientY);
-        }, { passive: true });
-
-        // 手机端焦点检测 (碰撞检测)
-        function checkMobileFocus(x, y) {
-            cards.forEach(card => {
-                const rect = card.getBoundingClientRect();
-                // 扩大一点检测范围，让体验更灵敏
-                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                    card.classList.add('mobile-focus');
-                } else {
-                    card.classList.remove('mobile-focus');
+        // 手机端：点击交互 (取代 hover)
+        const cards = document.querySelectorAll('.clue-card');
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // 阻止冒泡
+                e.stopPropagation();
+                
+                // 切换激活状态
+                const isActive = card.classList.contains('mobile-active');
+                
+                // 先关闭所有
+                cards.forEach(c => c.classList.remove('mobile-active'));
+                
+                // 如果刚才没激活，现在激活它
+                if (!isActive) {
+                    card.classList.add('mobile-active');
                 }
             });
-        }
+        });
+
+        // 点击空白处取消激活
+        document.addEventListener('click', () => {
+            cards.forEach(c => c.classList.remove('mobile-active'));
+        });
 
         // 连线逻辑
         function drawConnections() {
@@ -250,7 +275,7 @@
         }
         
         function forceShowMouse() { document.body.style.cursor = 'pointer'; }
-        function hideMouse() { document.body.style.cursor = 'none'; }
+        function hideMouse() { if(window.innerWidth > 768) document.body.style.cursor = 'none'; }
 
         window.addEventListener('load', drawConnections);
         window.addEventListener('resize', drawConnections);
