@@ -5,185 +5,210 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>线索 | 探寻</title>
     <style>
-        /* --- 1. 基础设置 --- */
+        /* --- 1. 全局设置 (与 Index 保持 1:1 统一) --- */
         :root {
-            --bg-color: #111;
+            --bg-color: #050505;
             --text-color: #e0e0e0;
-            --spotlight-size: 250px; /* 电脑端光圈大小 */
+            --font-stack: "Songti SC", "Noto Serif SC", "SimSun", serif;
+            --accent-red: #cc2222;
+            --spotlight-size: 250px;
             --mouse-x: 50vw; 
             --mouse-y: 50vh;
         }
 
         body {
-            margin: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: "Songti SC", serif;
-            overflow-x: hidden;
-            cursor: none; /* 电脑端隐藏鼠标 */
+            margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            font-family: var(--font-stack); overflow-x: hidden;
+            cursor: none; /* 电脑端隐藏默认鼠标 */
             min-height: 100vh;
         }
 
-        /* --- 2. 黑暗遮罩层 (仅电脑端显示) --- */
-        .spotlight-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100vh;
-            pointer-events: none;
-            z-index: 100;
-            background: radial-gradient(
-                circle var(--spotlight-size) at var(--mouse-x) var(--mouse-y), 
-                transparent 0%, 
-                rgba(0, 0, 0, 0.96) 100%
-            );
-            will-change: background;
+        /* --- 2. 核心容器与动画 --- */
+        #main-wrapper {
+            position: relative; z-index: 10; width: 100%;
+            /* 入场动画：着陆感 */
+            animation: landIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        /* --- 3. 放大镜边框 (仅电脑端显示) --- */
-        .magnifier-rim {
-            position: fixed;
-            top: 0; left: 0;
-            width: calc(var(--spotlight-size) * 2);
-            height: calc(var(--spotlight-size) * 2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 101;
-            transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%));
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1);
+        /* 离场动画：后退感 */
+        body.is-exiting #main-wrapper {
+            transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1);
+            transform: scale(0.6) translateZ(-500px); opacity: 0; filter: blur(10px);
         }
 
-        /* --- 4. 背景连线 --- */
-        #connection-layer {
+        /* --- 3. 背景层：混乱线索墙 (Gallery 变体布局) --- */
+        .layer-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
-        }
-        .clue-line {
-            stroke: rgba(255, 255, 255, 0.15);
-            stroke-width: 2; fill: none; stroke-dasharray: 8, 8;
+            z-index: 0; pointer-events: none; overflow: hidden;
         }
 
+        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; }
+        .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.5; stroke-dasharray: 0; }
+
+        /* 背景碎片的样式 (复用 Index 但压暗) */
+        .bg-clue {
+            position: absolute;
+            background: #f4f4f4; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            /* 🔥 重点：比首页更暗、模糊，作为背景纹理 */
+            filter: grayscale(100%) brightness(0.25) contrast(1.1) blur(1px); 
+            border: 1px solid #222;
+            display: flex; justify-content: center; align-items: center;
+            font-family: "Courier New", monospace; color: #111; font-weight: bold;
+            font-size: 0.5rem; overflow: hidden;
+            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .bg-clue.photo::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.3; }
+        .bg-clue.note { background: #fffff0; border: none; }
+
+        /* 🔥 背景布局变体 (区别于 Index，填补主卡片周围的空隙) */
+        .g1 { top: 10%; left: 5%; width: 100px; height: 140px; transform: rotate(15deg); }
+        .g2 { top: 15%; right: 8%; width: 120px; height: 100px; transform: rotate(-10deg); }
+        .g3 { top: 40%; left: -2%; width: 90px; height: 110px; transform: rotate(-25deg); }
+        .g4 { top: 35%; right: -2%; width: 140px; height: 90px; transform: rotate(5deg); }
+        .g5 { bottom: 20%; left: 8%; width: 110px; height: 150px; transform: rotate(8deg); }
+        .g6 { bottom: 15%; right: 5%; width: 100px; height: 120px; transform: rotate(-12deg); }
+        .g7 { top: 5%; left: 40%; width: 80px; height: 80px; transform: rotate(45deg); opacity: 0.5; }
+        .g8 { bottom: 5%; right: 40%; width: 150px; height: 100px; transform: rotate(-5deg); opacity: 0.5; }
+        /* 更多的细碎纸片 */
+        .g9 { top: 60%; left: 15%; width: 60px; height: 60px; transform: rotate(20deg); }
+        .g10 { top: 55%; right: 15%; width: 70px; height: 90px; transform: rotate(-15deg); }
+
+        /* --- 4. 前景：标题与主卡片 --- */
         header {
             position: relative; z-index: 10;
-            text-align: center; padding: 100px 20px;
+            text-align: center; padding: 80px 20px 50px;
         }
-        h1 { letter-spacing: 0.5em; font-weight: 300; font-size: 2rem; opacity: 0.5; }
+        h1 { 
+            letter-spacing: 0.5em; font-weight: 300; font-size: 2rem; opacity: 0.95;
+            text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 8px rgba(255,255,255,0.15); /* 统一辉光 */
+        }
+        h1::after {
+            content: ''; display: block; width: 40px; height: 1px; 
+            background: #aaa; margin: 15px auto 0;
+            box-shadow: 0 0 8px rgba(255,255,255,0.3);
+        }
 
-        /* --- 5. 卡片布局 (电脑端默认) --- */
         .board-container {
-            position: relative;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 50px 20px 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 250px; 
+            position: relative; max-width: 1400px; margin: 0 auto; padding: 20px 20px 200px;
+            display: flex; flex-direction: column; gap: 250px; 
         }
 
+        /* 主线索卡片 (保持高亮与质感) */
         .clue-card {
-            position: relative;
-            z-index: 5;
-            width: 500px;
-            background: #e6e6e6;
-            padding: 15px 15px 40px 15px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: relative; z-index: 5; width: 500px;
+            background: #e6e6e6; padding: 15px 15px 40px 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9); /* 更深的阴影，与背景拉开距离 */
             transition: transform 0.3s ease-out, filter 0.3s ease;
-            
-            /* 电脑端默认：黑暗模式 */
             filter: brightness(0.3) grayscale(100%);
+            display: flex; flex-direction: column;
         }
 
-        /* 电脑端错落布局 */
+        /* 布局错落 */
         .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 5%; transform: rotate(-3deg); }
         .clue-card:nth-child(even) { align-self: flex-end; margin-right: 5%; transform: rotate(2deg); margin-top: 50px; }
         .clue-card:nth-child(3) { align-self: center; transform: rotate(1deg); margin-left: 0; margin-right: 0; }
 
-        /* 交互：悬停变亮 */
         .clue-card:hover {
-            transform: scale(1.1) rotate(0deg) !important; 
-            z-index: 50;
+            transform: scale(1.1) rotate(0deg) !important; z-index: 50;
             filter: brightness(1) grayscale(0%);
         }
-
-        /* 手机点击激活样式 */
         .clue-card.mobile-active {
-            filter: brightness(1) grayscale(0%); /* 恢复彩色 */
-            transform: scale(1.05) !important;
-            z-index: 50;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            filter: brightness(1) grayscale(0%); transform: scale(1.05) !important; z-index: 50;
+            box-shadow: 0 0 30px rgba(255,255,255,0.15);
         }
 
-        .photo-area {
-            width: 100%; height: 350px;
-            background: #111; overflow: hidden; border: 1px solid #ccc;
-        }
-        .photo-area img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-area { width: 100%; height: 350px; background: #111; overflow: hidden; border: 1px solid #ccc; display: block; }
+        .photo-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .pin {
             position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
             width: 16px; height: 16px; background: #555; border-radius: 50%; z-index: 10;
         }
-        .clue-card:hover .pin, .clue-card.mobile-active .pin { background-color: #ff3333; box-shadow: 0 0 15px #ff3333; }
+        .clue-card:hover .pin, .clue-card.mobile-active .pin { background-color: #cc2222; box-shadow: 0 0 15px #cc2222; }
 
         .note {
             margin-top: 20px; color: #222; font-family: "Courier New", monospace;
             font-size: 1.1rem; text-align: center; font-weight: bold;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.8);
         }
 
+        /* --- 5. 交互层：手电筒与连线 --- */
+        .spotlight-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            pointer-events: none; z-index: 100;
+            background: radial-gradient(circle var(--spotlight-size) at var(--mouse-x) var(--mouse-y), transparent 0%, rgba(5, 5, 5, 0.98) 100%);
+            will-change: background;
+        }
+
+        .magnifier-rim {
+            position: fixed; top: 0; left: 0;
+            width: calc(var(--spotlight-size) * 2); height: calc(var(--spotlight-size) * 2);
+            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
+            pointer-events: none; z-index: 101;
+            transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%));
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        /* 连接主线索的虚线 */
+        #connection-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none;
+        }
+        .clue-line { stroke: rgba(255, 255, 255, 0.15); stroke-width: 2; fill: none; stroke-dasharray: 8, 8; }
+
+        /* --- 6. 底部控件 (Unified Ghost Button) --- */
         .footer-nav {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 120;
+            position: fixed; bottom: 40px; left: 0; width: 100%;
+            text-align: center; z-index: 120; pointer-events: none;
         }
+        
         .ghost-btn {
-            background: rgba(255,255,255,0.1); color: #fff; padding: 12px 30px;
-            border: 1px solid rgba(255,255,255,0.3); text-decoration: none; font-size: 0.9rem;
-            backdrop-filter: blur(5px); cursor: pointer;
+            pointer-events: auto; display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.6); text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+            flex-direction: row-reverse; /* 箭头在左 */
         }
 
-        /* --- 6. 📱 手机适配 (核心修改) --- */
+        .ghost-btn:hover {
+            border-color: rgba(255, 255, 255, 0.9); color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255,255,255,0.05);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .arrow-wrapper {
+            width: 0; overflow: hidden; opacity: 0; transform: translateX(5px);
+            transition: all 0.4s ease-out; display: flex; align-items: center;
+        }
+        .ghost-btn:hover .arrow-wrapper { width: 16px; margin-right: 10px; opacity: 1; transform: translateX(0); }
+
+        /* --- 7. 动画 --- */
+        @keyframes landIn {
+            0% { opacity: 0; transform: scale(1.2); filter: blur(8px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
+        /* --- 8. 适配 --- */
         @media (max-width: 768px) {
-            /* 1. 恢复鼠标指针 */
             body { cursor: auto; }
-            
-            /* 2. 隐藏放大镜和遮罩 */
             .spotlight-overlay, .magnifier-rim { display: none; }
             
-            /* 3. 布局调整 */
-            .board-container { 
-                gap: 120px; /* 间距缩小 */
-                padding-bottom: 120px;
-                padding-top: 50px;
-            }
-            
-            .clue-card { 
-                width: 75%; /* 卡片不要太宽，留出左右错落的空间 */
-                
-                /* 🔥 核心：手机端默认可见，只是黑白 */
-                filter: brightness(0.9) grayscale(100%); 
-            }
-
+            .board-container { gap: 120px; padding-bottom: 120px; padding-top: 50px; }
+            .clue-card { width: 75%; filter: brightness(0.9) grayscale(100%); }
             .photo-area { height: 200px; }
+            
+            /* 手机布局逻辑 */
+            .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 20px; margin-right: 0; transform: rotate(-2deg); }
+            .clue-card:nth-child(even) { align-self: flex-end; margin-right: 20px; margin-left: 0; transform: rotate(2deg); margin-top: 0; }
+            .clue-card:nth-child(3) { align-self: flex-start; margin-left: 20px; transform: rotate(-1deg); }
 
-            /* 🔥 核心：手机端错落排列 (Zig-zag) */
-            /* 奇数在左 */
-            .clue-card:nth-child(odd) { 
-                align-self: flex-start; 
-                margin-left: 20px; 
-                margin-right: 0;
-                transform: rotate(-2deg); 
-            }
-            /* 偶数在右 */
-            .clue-card:nth-child(even) { 
-                align-self: flex-end; 
-                margin-right: 20px; 
-                margin-left: 0;
-                transform: rotate(2deg); 
-                margin-top: 0; /* 重置电脑端的 margin-top */
-            }
-            /* 第三个也不要居中，跟随奇数规则 */
-            .clue-card:nth-child(3) {
-                align-self: flex-start;
-                margin-left: 20px;
-                transform: rotate(-1deg);
-            }
+            /* 手机上背景简化 */
+            .bg-clue { opacity: 0.3; }
+            .g3, .g4, .g9, .g10 { display: none; }
         }
     </style>
 </head>
@@ -191,65 +216,92 @@
 
     <div class="spotlight-overlay"></div>
     <div class="magnifier-rim"></div>
-    <svg id="connection-layer"></svg>
 
-    <header><h1>记忆线索</h1></header>
+    <div id="main-wrapper">
+        
+        <div class="layer-bg">
+            <svg class="string-web">
+                <line x1="0%" y1="10%" x2="100%" y2="20%" class="web-line"></line>
+                <line x1="80%" y1="0%" x2="90%" y2="100%" class="web-line"></line>
+                <line x1="20%" y1="0%" x2="10%" y2="100%" class="web-line"></line>
+                <line x1="0%" y1="80%" x2="100%" y2="90%" class="web-line"></line>
+            </svg>
 
-    <div class="board-container">
-        <div class="clue-card" id="card1">
-            <div class="pin"></div>
-            <div class="photo-area">
-                <img src="https://raw.githubusercontent.com/PikaQuC/shoujv.github.io/main/image/a999e19f47bcc427198ccc746f0b47eb.png" alt="证据1">
-            </div>
-            <div class="note">起点：2025</div>
+            <div class="bg-clue photo g1">EVIDENCE</div>
+            <div class="bg-clue note g2">???</div>
+            <div class="bg-clue photo g3">OLD</div>
+            <div class="bg-clue photo g4">KEY</div>
+            <div class="bg-clue note g5">LOC</div>
+            <div class="bg-clue photo g6">TARGET</div>
+            <div class="bg-clue note g7">!</div>
+            <div class="bg-clue note g8">PLAN</div>
+            <div class="bg-clue photo g9">X</div>
+            <div class="bg-clue photo g10">03.06</div>
         </div>
-        <div class="clue-card" id="card2"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">迷雾</div></div>
-        <div class="clue-card" id="card3"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">转折点</div></div>
-        <div class="clue-card" id="card4"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">终点</div></div>
-    </div>
 
-    <div class="footer-nav">
-        <a href="index.html" class="ghost-btn" onmouseover="forceShowMouse()" onmouseout="hideMouse()">返回倒计时</a>
+        <svg id="connection-layer"></svg>
+
+        <header><h1>记忆线索</h1></header>
+
+        <div class="board-container">
+            <div class="clue-card" id="card1">
+                <div class="pin"></div>
+                <div class="photo-area">
+                    <img src="https://raw.githubusercontent.com/PikaQuC/shoujv.github.io/main/image/a999e19f47bcc427198ccc746f0b47eb.png" alt="证据1">
+                </div>
+                <div class="note">起点：2024</div>
+            </div>
+            <div class="clue-card" id="card2"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">迷雾</div></div>
+            <div class="clue-card" id="card3"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">转折点</div></div>
+            <div class="clue-card" id="card4"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">终点</div></div>
+        </div>
+
+        <div class="footer-nav">
+            <a href="index.html" class="ghost-btn" onmouseover="forceShowMouse()" onmouseout="hideMouse()">
+                <span>返回倒计时</span>
+                <span class="arrow-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </span>
+            </a>
+        </div>
     </div>
 
     <script>
         const root = document.documentElement;
-        
-        // 电脑端：鼠标移动更新放大镜
+
+        // 穿梭逻辑
+        const linkBtn = document.querySelector('.ghost-btn');
+        linkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.add('is-exiting');
+            setTimeout(() => { window.location.href = this.href; }, 800);
+        });
+
+        // 手电筒与交互
         document.addEventListener('mousemove', (e) => {
-            // 只有在屏幕宽度大于768px时才计算，节省手机性能
             if (window.innerWidth > 768) {
                 root.style.setProperty('--mouse-x', e.clientX + 'px');
                 root.style.setProperty('--mouse-y', e.clientY + 'px');
             }
         });
 
-        // 手机端：点击交互 (取代 hover)
         const cards = document.querySelectorAll('.clue-card');
         cards.forEach(card => {
             card.addEventListener('click', (e) => {
-                // 阻止冒泡
                 e.stopPropagation();
-                
-                // 切换激活状态
                 const isActive = card.classList.contains('mobile-active');
-                
-                // 先关闭所有
                 cards.forEach(c => c.classList.remove('mobile-active'));
-                
-                // 如果刚才没激活，现在激活它
-                if (!isActive) {
-                    card.classList.add('mobile-active');
-                }
+                if (!isActive) card.classList.add('mobile-active');
             });
         });
-
-        // 点击空白处取消激活
         document.addEventListener('click', () => {
             cards.forEach(c => c.classList.remove('mobile-active'));
         });
 
-        // 连线逻辑
+        // 主卡片连线逻辑
         function drawConnections() {
             const svg = document.getElementById('connection-layer');
             svg.style.height = document.body.scrollHeight + 'px';
