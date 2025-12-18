@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>线索 | 探寻</title>
     <style>
-        /* --- 1. 全局设置 (与 Index 保持 1:1 统一) --- */
+        /* --- 1. 全局设置 --- */
         :root {
             --bg-color: #050505;
             --text-color: #e0e0e0;
@@ -19,24 +19,21 @@
         body {
             margin: 0; background-color: var(--bg-color); color: var(--text-color);
             font-family: var(--font-stack); overflow-x: hidden;
-            cursor: none; /* 电脑端隐藏默认鼠标 */
-            min-height: 100vh;
+            cursor: none; min-height: 100vh;
         }
 
         /* --- 2. 核心容器与动画 --- */
         #main-wrapper {
             position: relative; z-index: 10; width: 100%;
-            /* 入场动画：着陆感 */
             animation: landIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        /* 离场动画：后退感 */
         body.is-exiting #main-wrapper {
             transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1);
             transform: scale(0.6) translateZ(-500px); opacity: 0; filter: blur(10px);
         }
 
-        /* --- 3. 背景层：混乱线索墙 (Gallery 变体布局) --- */
+        /* --- 3. 背景层：混乱线索墙 --- */
         .layer-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none; overflow: hidden;
@@ -45,11 +42,10 @@
         .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; }
         .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.5; stroke-dasharray: 0; }
 
-        /* 背景碎片的样式 (复用 Index 但压暗) */
+        /* 电脑端默认样式 (很暗，配合手电筒) */
         .bg-clue {
             position: absolute;
             background: #f4f4f4; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-            /* 🔥 重点：比首页更暗、模糊，作为背景纹理 */
             filter: grayscale(100%) brightness(0.25) contrast(1.1) blur(1px); 
             border: 1px solid #222;
             display: flex; justify-content: center; align-items: center;
@@ -61,7 +57,7 @@
         .bg-clue.photo::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.3; }
         .bg-clue.note { background: #fffff0; border: none; }
 
-        /* 🔥 背景布局变体 (区别于 Index，填补主卡片周围的空隙) */
+        /* 背景布局 */
         .g1 { top: 10%; left: 5%; width: 100px; height: 140px; transform: rotate(15deg); }
         .g2 { top: 15%; right: 8%; width: 120px; height: 100px; transform: rotate(-10deg); }
         .g3 { top: 40%; left: -2%; width: 90px; height: 110px; transform: rotate(-25deg); }
@@ -70,18 +66,14 @@
         .g6 { bottom: 15%; right: 5%; width: 100px; height: 120px; transform: rotate(-12deg); }
         .g7 { top: 5%; left: 40%; width: 80px; height: 80px; transform: rotate(45deg); opacity: 0.5; }
         .g8 { bottom: 5%; right: 40%; width: 150px; height: 100px; transform: rotate(-5deg); opacity: 0.5; }
-        /* 更多的细碎纸片 */
         .g9 { top: 60%; left: 15%; width: 60px; height: 60px; transform: rotate(20deg); }
         .g10 { top: 55%; right: 15%; width: 70px; height: 90px; transform: rotate(-15deg); }
 
-        /* --- 4. 前景：标题与主卡片 --- */
-        header {
-            position: relative; z-index: 10;
-            text-align: center; padding: 80px 20px 50px;
-        }
+        /* --- 4. 前景 --- */
+        header { position: relative; z-index: 10; text-align: center; padding: 80px 20px 50px; }
         h1 { 
             letter-spacing: 0.5em; font-weight: 300; font-size: 2rem; opacity: 0.95;
-            text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 8px rgba(255,255,255,0.15); /* 统一辉光 */
+            text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 8px rgba(255,255,255,0.15);
         }
         h1::after {
             content: ''; display: block; width: 40px; height: 1px; 
@@ -94,17 +86,15 @@
             display: flex; flex-direction: column; gap: 250px; 
         }
 
-        /* 主线索卡片 (保持高亮与质感) */
         .clue-card {
             position: relative; z-index: 5; width: 500px;
             background: #e6e6e6; padding: 15px 15px 40px 15px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9); /* 更深的阴影，与背景拉开距离 */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
             transition: transform 0.3s ease-out, filter 0.3s ease;
             filter: brightness(0.3) grayscale(100%);
             display: flex; flex-direction: column;
         }
 
-        /* 布局错落 */
         .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 5%; transform: rotate(-3deg); }
         .clue-card:nth-child(even) { align-self: flex-end; margin-right: 5%; transform: rotate(2deg); margin-top: 50px; }
         .clue-card:nth-child(3) { align-self: center; transform: rotate(1deg); margin-left: 0; margin-right: 0; }
@@ -133,7 +123,7 @@
             text-shadow: 0 1px 1px rgba(255,255,255,0.8);
         }
 
-        /* --- 5. 交互层：手电筒与连线 --- */
+        /* --- 5. 交互层 --- */
         .spotlight-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             pointer-events: none; z-index: 100;
@@ -150,19 +140,17 @@
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1);
         }
 
-        /* 连接主线索的虚线 */
         #connection-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1; pointer-events: none;
         }
         .clue-line { stroke: rgba(255, 255, 255, 0.15); stroke-width: 2; fill: none; stroke-dasharray: 8, 8; }
 
-        /* --- 6. 底部控件 (Unified Ghost Button) --- */
+        /* --- 6. 底部控件 --- */
         .footer-nav {
             position: fixed; bottom: 40px; left: 0; width: 100%;
             text-align: center; z-index: 120; pointer-events: none;
         }
-        
         .ghost-btn {
             pointer-events: auto; display: inline-flex; align-items: center; justify-content: center;
             padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em;
@@ -170,29 +158,26 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
-            flex-direction: row-reverse; /* 箭头在左 */
+            flex-direction: row-reverse; 
         }
-
         .ghost-btn:hover {
             border-color: rgba(255, 255, 255, 0.9); color: #fff;
             background-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255,255,255,0.05);
             transform: translateY(-2px) scale(1.02);
         }
-        
         .arrow-wrapper {
             width: 0; overflow: hidden; opacity: 0; transform: translateX(5px);
             transition: all 0.4s ease-out; display: flex; align-items: center;
         }
         .ghost-btn:hover .arrow-wrapper { width: 16px; margin-right: 10px; opacity: 1; transform: translateX(0); }
 
-        /* --- 7. 动画 --- */
         @keyframes landIn {
             0% { opacity: 0; transform: scale(1.2); filter: blur(8px); }
             100% { opacity: 1; transform: scale(1); filter: blur(0); }
         }
 
-        /* --- 8. 适配 --- */
+        /* --- 7. 🔥 手机适配 (核心修复) --- */
         @media (max-width: 768px) {
             body { cursor: auto; }
             .spotlight-overlay, .magnifier-rim { display: none; }
@@ -200,15 +185,21 @@
             .board-container { gap: 120px; padding-bottom: 120px; padding-top: 50px; }
             .clue-card { width: 75%; filter: brightness(0.9) grayscale(100%); }
             .photo-area { height: 200px; }
-            
-            /* 手机布局逻辑 */
+
             .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 20px; margin-right: 0; transform: rotate(-2deg); }
             .clue-card:nth-child(even) { align-self: flex-end; margin-right: 20px; margin-left: 0; transform: rotate(2deg); margin-top: 0; }
             .clue-card:nth-child(3) { align-self: flex-start; margin-left: 20px; transform: rotate(-1deg); }
 
-            /* 手机上背景简化 */
-            .bg-clue { opacity: 0.3; }
-            .g3, .g4, .g9, .g10 { display: none; }
+            /* 🔥 修复背景不可见的问题 */
+            .bg-clue {
+                /* 手机上强制提高不透明度 */
+                opacity: 0.8 !important; 
+                /* 手机上大幅提高亮度，去掉模糊，确保清晰可见 */
+                filter: grayscale(100%) brightness(0.7) contrast(1.0) blur(0px) !important;
+            }
+            
+            /* 稍微隐藏一些太靠边的元素，防止手机屏幕看起来太乱 */
+            .g3, .g4 { display: none; }
         }
     </style>
 </head>
@@ -272,7 +263,6 @@
     <script>
         const root = document.documentElement;
 
-        // 穿梭逻辑
         const linkBtn = document.querySelector('.ghost-btn');
         linkBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -280,7 +270,6 @@
             setTimeout(() => { window.location.href = this.href; }, 800);
         });
 
-        // 手电筒与交互
         document.addEventListener('mousemove', (e) => {
             if (window.innerWidth > 768) {
                 root.style.setProperty('--mouse-x', e.clientX + 'px');
@@ -301,7 +290,6 @@
             cards.forEach(c => c.classList.remove('mobile-active'));
         });
 
-        // 主卡片连线逻辑
         function drawConnections() {
             const svg = document.getElementById('connection-layer');
             svg.style.height = document.body.scrollHeight + 'px';
