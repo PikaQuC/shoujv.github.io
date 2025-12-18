@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>锁定 | 武汉</title>
+    <style>
+        /* --- 1. 全局设置 --- */
+        :root {
+            --bg-color: #050505;
+            --text-color: #e0e0e0;
+            --font-stack: "Songti SC", "Noto Serif SC", "SimSun", serif;
+            --accent-red: #cc2222;
+        }
+
+        body {
+            margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            font-family: var(--font-stack); 
+            overflow: hidden; cursor: crosshair;
+            height: 100vh; width: 100vw;
+            user-select: none; touch-action: none;
+        }
+
+        #main-wrapper {
+            position: relative; width: 100%; height: 100%;
+            animation: fadeInZoom 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        body.is-exiting #main-wrapper {
+            transition: all 0.8s ease-in;
+            transform: scale(2); opacity: 0; filter: blur(20px);
+        }
+
+        /* --- 2. 背景装饰 --- */
+        .layer-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.3; }
+        .sketch-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; }
+        .grid-line { stroke: rgba(255,255,255,0.3); stroke-width: 0.5; stroke-dasharray: 100% 0; }
+
+        /* --- 3. 地图视口容器 --- */
+        .map-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw; height: 100vh; 
+            background: #000;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* 可移动图层 (正方形容器) */
+        .map-movable-layer {
+            position: absolute;
+            top: 0; left: 0;
+            transform-origin: 0 0;
+            will-change: transform;
+            /* 初始宽高，会被JS覆盖 */
+            width: 100%; height: 100%; 
+        }
+
+        /* 地图图片 */
+        .map-image {
+            display: block;
+            pointer-events: none; 
+            filter: grayscale(100%) invert(88%) contrast(150%) brightness(0.7);
+            opacity: 0.9;
+            width: 100%; height: 100%;
+            object-fit: fill; 
+        }
+
+        /* 📍 定位点容器 */
+        .map-pin {
+            position: absolute;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 20; cursor: pointer;
+            
+            /* 🔥🔥 核心修正 1：锚点归零 🔥🔥 
+               使用 translate(-50%, -50%) 确保是红点的【正中心】对准坐标
+               而不是红点的左上角对准坐标。
+               这是解决多设备偏差的关键！
+            */
+            transform: translate(-50%, -50%) scale(0.5); 
+            transform-origin: center center;
+            
+            /* 扩大点击热区 */
+            padding: 30px; 
+            margin: -30px; 
+        }
+        
+        /* 红点本体 */
+        .pin-dot {
+            width: 20px; height: 20px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            box-shadow: 0 0 25px var(--accent-red);
+            animation: pulse 1.5s infinite;
+            position: relative;
+            pointer-events: none; 
+        }
+        .pin-dot::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 100%; height: 100%;
+            border: 2px solid var(--accent-red); border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: ripple 1.5s infinite;
+        }
+
+        /* 📍 小酒馆位置 (重新校准后的坐标) */
+        /* 因为锚点变了，可能需要微调 0.x% */
+        .pin-bistro { top: 60.7%; left: 62%; }
+
+        /* 文字标签 */
+        .pin-label {
+            position: absolute; /* 改为绝对定位，防止影响红点中心 */
+            top: 70px;          /* 放在红点下方 */
+            left: 50%;
+            transform: translateX(-50%) translateY(10px); /* 水平居中 */
+            
+            font-family: "Courier New", monospace;
+            font-size: 1.5rem; 
+            color: #fff;
+            background: rgba(204, 34, 34, 0.9);
+            padding: 4px 10px; border-radius: 4px;
+            white-space: nowrap; text-shadow: none; font-weight: bold;
+            
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        /* 交互触发显示 */
+        .map-pin:hover .pin-label { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .map-pin:active .pin-label { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* 扫描线 */
+        .scan-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(204, 34, 34, 0.5);
+            box-shadow: 0 0 15px rgba(204, 34, 34, 0.8);
+            animation: scan 5s linear infinite; z-index: 30; opacity: 0.5; pointer-events: none;
+        }
+
+        /* UI */
+        .header-ui { position: absolute; top: 5%; width: 100%; text-align: center; z-index: 20; pointer-events: none; }
+        h1 { font-size: 1.5rem; letter-spacing: 0.5em; font-weight: 300; text-shadow: 0 0 10px rgba(255,255,255,0.2); margin: 0; }
+        .sub-text { font-family: "Courier New", monospace; font-size: 0.8rem; margin-top: 10px; opacity: 0.6; letter-spacing: 0.2em; }
+        
+        .controls-hint {
+            position: absolute; top: 20px; right: 20px; z-index: 50;
+            color: rgba(255,255,255,0.4); font-size: 0.7rem; font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.2); padding: 5px 10px;
+            pointer-events: none;
+        }
+
+        .footer-nav { position: absolute; bottom: 5%; width: 100%; text-align: center; z-index: 20; }
+        .ghost-btn {
+            pointer-events: auto; display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.6); text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            transition: all 0.5s; cursor: pointer; flex-direction: row-reverse;
+        }
+        .ghost-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .arrow-wrapper { width: 0; overflow: hidden; opacity: 0; transform: translateX(5px); transition: 0.4s; display: flex; align-items: center; }
+        .ghost-btn:hover .arrow-wrapper { width: 16px; margin-right: 10px; opacity: 1; transform: translateX(0); }
+
+        @keyframes fadeInZoom { from { opacity: 0; transform: scale(0.95); filter: blur(10px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.6; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes ripple { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } }
+        @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.2rem; }
+            .header-ui { top: 40px; }
+            .footer-nav { bottom: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-wrapper">
+        <div class="layer-bg">
+            <svg class="sketch-grid">
+                <line x1="10%" y1="0" x2="10%" y2="100%" class="grid-line"></line>
+                <line x1="90%" y1="0" x2="90%" y2="100%" class="grid-line"></line>
+                <line x1="0" y1="20%" x2="100%" y2="20%" class="grid-line"></line>
+                <line x1="0" y1="80%" x2="100%" y2="80%" class="grid-line"></line>
+            </svg>
+        </div>
+
+        <div class="header-ui">
+            <h1>目标锁定</h1>
+            <div class="sub-text">WUHAN / 30.48°N, 114.40°E</div>
+        </div>
+
+        <div class="controls-hint">SCROLL TO ZOOM / DRAG TO MOVE</div>
+
+        <div class="map-container" id="mapContainer">
+            <div class="scan-line"></div>
+            
+            <div class="map-movable-layer" id="mapLayer">
+                <img src="https://raw.githubusercontent.com/PikaQuC/shoujv.github.io/main/image/wuhanmap.png" class="map-image" id="targetMap">
+                <div class="map-pin pin-bistro">
+                    <div class="pin-dot"></div>
+                    <div class="pin-label">半盏诗小酒馆</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <a href="gallery.html" class="ghost-btn">
+                <span>返回线索板</span>
+                <span class="arrow-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const linkBtn = document.querySelector('.ghost-btn');
+        const container = document.getElementById('mapContainer');
+        const mapLayer = document.getElementById('mapLayer');
+        const mapImg = document.getElementById('targetMap');
+
+        linkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.add('is-exiting');
+            setTimeout(() => { window.location.href = this.href; }, 800);
+        });
+
+        // ==========================================
+        // 🗺️ 强制 1:1 纵横比锁定
+        // ==========================================
+
+        let state = {
+            scale: 1, panning: false, pointX: 0, pointY: 0, startX: 0, startY: 0, x: 0, y: 0, baseSize: 0
+        };
+
+        function initMap() {
+            const cw = container.clientWidth;
+            const ch = container.clientHeight;
+            
+            // 🔥🔥 核心修正 2：写死 1:1 比例 🔥🔥
+            // 因为你的图是 5000x5000，我们不再依赖 img loading 状态
+            // 我们直接比较 屏幕宽 vs 屏幕高
+            
+            // 逻辑：谁大用谁，确保填满 (Cover)
+            const maxSize = Math.max(cw, ch);
+            
+            // 强制图层为正方形
+            state.baseSize = maxSize;
+            mapLayer.style.width = `${state.baseSize}px`;
+            mapLayer.style.height = `${state.baseSize}px`;
+
+            state.scale = 1;
+            
+            // 居中
+            state.x = (cw - state.baseSize) / 2;
+            state.y = (ch - state.baseSize) / 2;
+
+            updateTransform();
+        }
+
+        function updateTransform() {
+            const cw = container.clientWidth;
+            const ch = container.clientHeight;
+            const currentSize = state.baseSize * state.scale;
+
+            // X 轴限制
+            if (currentSize <= cw) {
+                state.x = (cw - currentSize) / 2;
+            } else {
+                const minX = cw - currentSize;
+                const maxX = 0;
+                if (state.x < minX) state.x = minX;
+                if (state.x > maxX) state.x = maxX;
+            }
+
+            // Y 轴限制
+            if (currentSize <= ch) {
+                state.y = (ch - currentSize) / 2;
+            } else {
+                const minY = ch - currentSize;
+                const maxY = 0;
+                if (state.y < minY) state.y = minY;
+                if (state.y > maxY) state.y = maxY;
+            }
+
+            mapLayer.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        }
+
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = container.getBoundingClientRect();
+            const xs = (e.clientX - rect.left - state.x) / state.scale;
+            const ys = (e.clientY - rect.top - state.y) / state.scale;
+            const factor = e.deltaY > 0 ? 0.9 : 1.1;
+            let newScale = state.scale * factor;
+            if (newScale < 1) newScale = 1; 
+            if (newScale > 8) newScale = 8; 
+            state.x -= xs * (newScale - state.scale);
+            state.y -= ys * (newScale - state.scale);
+            state.scale = newScale;
+            updateTransform();
+        }, { passive: false });
+
+        function onPointerDown(e) {
+            e.preventDefault(); 
+            state.panning = true;
+            state.pointX = e.clientX || e.touches[0].clientX;
+            state.pointY = e.clientY || e.touches[0].clientY;
+            state.startX = state.x;
+            state.startY = state.y;
+            mapLayer.style.cursor = 'grabbing';
+        }
+
+        function onPointerMove(e) {
+            if (!state.panning) return;
+            e.preventDefault();
+            const cx = e.clientX || e.touches[0].clientX;
+            const cy = e.clientY || e.touches[0].clientY;
+            state.x = state.startX + (cx - state.pointX);
+            state.y = state.startY + (cy - state.pointY);
+            updateTransform();
+        }
+
+        function onPointerUp() {
+            state.panning = false;
+            mapLayer.style.cursor = 'crosshair';
+        }
+
+        container.addEventListener('mousedown', onPointerDown);
+        container.addEventListener('touchstart', onPointerDown, { passive: false });
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('touchmove', onPointerMove, { passive: false });
+        window.addEventListener('mouseup', onPointerUp);
+        window.addEventListener('touchend', onPointerUp);
+
+        // 初始化
+        window.addEventListener('resize', initMap);
+        setTimeout(initMap, 100); 
+
+    </script>
+</body>
+</html>
