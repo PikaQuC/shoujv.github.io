@@ -22,18 +22,28 @@
             user-select: none;
         }
 
-        /* --- 2. 视差容器 --- */
-        #scene {
-            position: relative;
-            width: 100%; height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 1000px;
-            overflow: hidden;
+        /* --- 2. 核心容器与动画 --- */
+        #main-wrapper {
+            position: relative; width: 100%; height: 100%;
+            /* 回归动画：从放大状态缩小回来 */
+            animation: returnIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        /* --- 3. 背景层：混乱线索墙 (大幅升级) --- */
+        /* 离场状态：猛烈放大 */
+        body.is-exiting #main-wrapper {
+            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.8s ease-in;
+            transform: scale(15) translateZ(0); 
+            opacity: 0; pointer-events: none;
+        }
+
+        /* --- 3. 视差场景 --- */
+        #scene {
+            position: relative; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            perspective: 1000px; overflow: hidden;
+        }
+
+        /* --- 4. 背景层：线索墙 (大幅增强) --- */
         .layer-bg {
             position: absolute;
             /* 范围扩大，方便放更多边缘的线索 */
@@ -43,72 +53,72 @@
             pointer-events: none;
         }
 
-        /* 红线网：更密集 */
-        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; }
-        .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.6; stroke-dasharray: 0; }
+        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; }
+        .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.5; stroke-dasharray: 5,5; }
 
-        /* 线索通用样式 */
+        /* 线索碎片通用样式 */
         .clue-item {
             position: absolute;
-            background: #f4f4f4;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-            /* 默认都很暗，保证不抢文字 */
-            filter: grayscale(100%) brightness(0.35) contrast(1.2); 
-            border: 1px solid #222;
+            background: #f0f0f0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            /* 保持暗调，不抢文字风头 */
+            filter: grayscale(100%) brightness(0.35) contrast(1.1); 
+            border: 1px solid #333;
             display: flex; justify-content: center; align-items: center;
             font-family: "Courier New", monospace; color: #111; font-weight: bold;
-            font-size: 0.5rem; overflow: hidden;
-            /* 增加一点纸张的粗糙纹理 */
+            font-size: 0.7rem; overflow: hidden;
             background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
         }
+        .clue-item.photo::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.2; }
+        .clue-item.note { background: #fffff0; border: none; font-size: 0.6rem; }
+        .clue-item.map { background: #dcdcdc; border: 2px solid #555; }
+
+        /* --- 🔥 电脑端丰富布局 (20+ 元素) --- */
+        /* 中心区 (稍微留白给文字) */
+        .c1 { top: 20%; left: 25%; width: 120px; height: 160px; transform: rotate(-5deg); }
+        .c2 { top: 25%; right: 25%; width: 140px; height: 110px; transform: rotate(3deg); }
+        .c3 { bottom: 25%; left: 28%; width: 100px; height: 130px; transform: rotate(8deg); }
+        .c4 { bottom: 20%; right: 28%; width: 160px; height: 120px; transform: rotate(-2deg); }
         
-        /* 模拟照片黑框 */
-        .clue-item.photo::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.3; }
-        /* 模拟便签纸 */
-        .clue-item.note { background: #fffff0; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        .clue-item.map { background: #e0e0e0; border: 2px solid #555; }
+        /* 边缘区 (填补空缺) */
+        .c5 { top: 10%; left: 10%; width: 100px; height: 140px; transform: rotate(15deg); }
+        .c6 { top: 5%; right: 15%; width: 90px; height: 90px; transform: rotate(-10deg); }
+        .c7 { bottom: 10%; left: 10%; width: 150px; height: 100px; transform: rotate(-5deg); }
+        .c8 { bottom: 5%; right: 10%; width: 120px; height: 150px; transform: rotate(12deg); }
+        
+        /* 深层背景 (模糊处理) */
+        .c9 { top: 50%; left: 10%; width: 80px; height: 80px; transform: rotate(45deg); opacity: 0.6; filter: blur(2px); }
+        .c10 { top: 40%; right: 5%; width: 110px; height: 140px; transform: rotate(-15deg); opacity: 0.6; filter: blur(2px); }
+        .c11 { top: 5%; left: 50%; width: 140px; height: 100px; transform: translate(-50%, 0) rotate(2deg); opacity: 0.5; z-index: -1; }
+        .c12 { bottom: 2%; left: 50%; width: 100px; height: 100px; transform: translate(-50%, 0) rotate(-2deg); opacity: 0.5; z-index: -1; }
+        
+        /* 更多细碎点缀 */
+        .c13 { top: 15%; left: 40%; width: 60px; height: 60px; transform: rotate(-20deg); }
+        .c14 { bottom: 30%; right: 15%; width: 70px; height: 90px; transform: rotate(20deg); }
+        .c15 { top: 60%; left: 5%; width: 100px; height: 80px; transform: rotate(10deg); }
+        .c16 { top: 30%; right: 40%; width: 50px; height: 70px; transform: rotate(-5deg); }
+        .c17 { top: 80%; left: 20%; width: 80px; height: 80px; transform: rotate(30deg); }
+        .c18 { top: 10%; right: 5%; width: 100px; height: 130px; transform: rotate(-8deg); }
 
-        /* --- 🔥 混乱布局定义 (13个点位) --- */
-        /* 左上区 */
-        .c1 { top: 15%; left: 10%; width: 120px; height: 150px; transform: rotate(-8deg); z-index: 2; }
-        .c6 { top: 5%; left: 25%; width: 80px; height: 80px; transform: rotate(15deg); z-index: 1; } /* 便签 */
-        .c10 { top: 25%; left: 5%; width: 160px; height: 100px; transform: rotate(5deg); z-index: 0; opacity: 0.5; filter: blur(1px) brightness(0.2) !important; } /* 远景地图 */
+        /* 远景大图 (氛围) */
+        .c19 { top: 50%; left: 50%; width: 300px; height: 200px; transform: translate(-50%, -50%) rotate(-10deg); opacity: 0.15; z-index: -2; filter: blur(4px) !important; }
+        .c20 { top: 45%; left: 60%; width: 200px; height: 150px; transform: translate(-50%, -50%) rotate(5deg); opacity: 0.15; z-index: -2; filter: blur(3px) !important; }
 
-        /* 右上区 */
-        .c2 { top: 18%; right: 15%; width: 140px; height: 100px; transform: rotate(6deg); z-index: 2; }
-        .c7 { top: 10%; right: 30%; width: 90px; height: 120px; transform: rotate(-12deg); z-index: 1; }
-        .c11 { top: 5%; right: 5%; width: 100px; height: 100px; transform: rotate(20deg); z-index: 0; }
-
-        /* 左下区 */
-        .c3 { bottom: 20%; left: 20%; width: 100px; height: 130px; transform: rotate(12deg); z-index: 2; }
-        .c8 { bottom: 35%; left: 8%; width: 110px; height: 90px; transform: rotate(-5deg); z-index: 1; }
-        .c12 { bottom: 10%; left: 35%; width: 70px; height: 70px; transform: rotate(45deg); z-index: 3; } /* 小纸片 */
-
-        /* 右下区 */
-        .c4 { bottom: 15%; right: 12%; width: 150px; height: 110px; transform: rotate(-6deg); z-index: 2; }
-        .c9 { bottom: 30%; right: 28%; width: 100px; height: 140px; transform: rotate(8deg); z-index: 1; }
-
-        /* 中间背景区 (模糊处理，增加景深) */
-        .c5 { top: 50%; left: 50%; width: 250px; height: 180px; transform: translate(-50%, -50%) rotate(-10deg); opacity: 0.2; z-index: -1; filter: blur(2px) grayscale(100%) !important; }
-        .c13 { top: 40%; left: 60%; width: 180px; height: 120px; transform: translate(-50%, -50%) rotate(5deg); opacity: 0.15; z-index: -2; filter: blur(3px) grayscale(100%) !important; }
-
-        /* --- 4. 前景层：文字 --- */
+        /* --- 5. 前景层：文字内容 --- */
         .layer-content {
-            position: relative; z-index: 10;
-            text-align: center;
-            text-shadow: 0 0 30px rgba(0,0,0,1); /* 加重文字阴影，防止背景太乱看不清 */
-            transform: translateZ(40px);
+            position: relative; z-index: 10; text-align: center;
+            text-shadow: 0 0 20px rgba(0,0,0,0.9);
+            transform: translateZ(30px);
         }
 
         .title {
             font-size: 1.4rem; letter-spacing: 0.3em; margin-bottom: 5vh;
-            font-weight: 300; opacity: 0.95; position: relative; display: inline-block;
+            font-weight: 300; opacity: 0.9; position: relative; display: inline-block;
         }
         .title::after {
             content: ''; display: block; width: 40px; height: 1px; 
-            background: #aaa; margin: 15px auto 0;
-            box-shadow: 0 0 8px rgba(255,255,255,0.3);
+            background: #888; margin: 15px auto 0; box-shadow: 0 0 8px rgba(255,255,255,0.2);
         }
 
         .countdown-wrapper { display: flex; flex-direction: column; gap: 1.5vh; }
@@ -116,33 +126,15 @@
         .unit-label { font-size: 0.9rem; font-style: italic; opacity: 0.6; margin-left: 8px; font-weight: normal; font-family: "Georgia", serif; }
         .footer-text { margin-top: 6vh; font-size: 0.8rem; letter-spacing: 0.2em; opacity: 0.5; }
 
-        /* --- 5. 穿越特效 CSS --- */
-        body.is-exiting { pointer-events: none; }
-        body.is-exiting .layer-bg {
-            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1);
-            transform: scale(8) translateZ(0) !important; /* 放大倍数稍微减小一点，因为现在东西多了 */
-            opacity: 0;
-        }
-        body.is-exiting .layer-content {
-            transition: all 0.5s ease-in;
-            transform: scale(0.8) translateZ(-100px) !important;
-            opacity: 0; filter: blur(10px);
-        }
-        body.is-exiting .btn-container { transition: opacity 0.3s; opacity: 0; }
-
-        /* --- 6. 按钮样式 --- */
-        .btn-container {
-            position: fixed; bottom: 50px; left: 0; width: 100%;
-            text-align: center; z-index: 20; pointer-events: none;
-        }
+        /* --- 6. 底部按钮 --- */
+        .btn-container { position: fixed; bottom: 50px; left: 0; width: 100%; text-align: center; z-index: 20; }
         .ghost-btn {
             pointer-events: auto; display: inline-flex; align-items: center; justify-content: center;
             padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em;
             color: rgba(255, 255, 255, 0.6); text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(0,0,0,0.6); /* 按钮底色加深，防止背景太乱干扰 */
-            backdrop-filter: blur(4px); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
         }
         .ghost-btn:hover {
             border-color: rgba(255, 255, 255, 0.9); color: #fff;
@@ -150,10 +142,7 @@
             box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255,255,255,0.05);
             transform: translateY(-2px) scale(1.02);
         }
-        .arrow-wrapper {
-            width: 0; overflow: hidden; opacity: 0; transform: translateX(-5px);
-            transition: all 0.4s ease-out; display: flex; align-items: center;
-        }
+        .arrow-wrapper { width: 0; overflow: hidden; opacity: 0; transform: translateX(-5px); transition: all 0.4s ease-out; display: flex; align-items: center; }
         .ghost-btn:hover .arrow-wrapper { width: 16px; margin-left: 10px; opacity: 1; transform: translateX(0); }
 
         #permission-btn {
@@ -163,70 +152,86 @@
             backdrop-filter: blur(2px); transition: 0.3s;
         }
 
+        @keyframes returnIn {
+            0% { opacity: 0; transform: scale(1.5); filter: blur(10px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
         /* --- 7. 适配 --- */
         @media (min-width: 768px) {
             .title { font-size: 2rem; margin-bottom: 8vh; }
             .countdown-wrapper { flex-direction: row; gap: 50px; }
             .time-unit { font-size: 5rem; }
             .unit-label { font-size: 1.2rem; }
-            .clue-item { filter: grayscale(100%) brightness(0.25) contrast(1.2); } /* 电脑上更暗一点 */
+            /* 电脑端再暗一点，防止干扰 */
+            .clue-item { filter: grayscale(100%) brightness(0.3) contrast(1.2); }
         }
+
         @media (max-width: 767px) {
-            /* 手机上隐藏最边缘的几个，防止溢出太多 */
-            .c10, .c11, .c12 { display: none; }
+            .clue-item { filter: grayscale(100%) brightness(0.45); }
+            /* 手机上隐藏一部分，防止太乱 */
+            .c9, .c10, .c13, .c14, .c15, .c16, .c17, .c18 { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div id="scene">
-        
-        <div class="layer-bg" id="bgLayer">
-            <svg class="string-web">
-                <line x1="10%" y1="15%" x2="50%" y2="50%" class="web-line"></line>
-                <line x1="90%" y1="18%" x2="50%" y2="50%" class="web-line"></line>
-                <line x1="20%" y1="80%" x2="50%" y2="50%" class="web-line"></line>
-                <line x1="25%" y1="5%" x2="10%" y2="15%" class="web-line"></line>
-                <line x1="88%" y1="85%" x2="60%" y2="40%" class="web-line"></line>
-                <line x1="30%" y1="10%" x2="70%" y2="10%" class="web-line"></line>
-            </svg>
-
-            <div class="clue-item photo c1">EVIDENCE</div>
-            <div class="clue-item photo c2">SUSPECT</div>
-            <div class="clue-item photo c3">2026.03</div>
-            <div class="clue-item photo c4">TARGET</div>
-
-            <div class="clue-item map c5">MAP WUHAN</div>
-            <div class="clue-item map c13">PLAN B</div>
-
-            <div class="clue-item note c6">???</div>
-            <div class="clue-item photo c7">UNKNOWN</div>
-            <div class="clue-item note c8">LOC</div>
-            <div class="clue-item photo c9">KEY</div>
-            
-            <div class="clue-item map c10">AREA 51</div>
-            <div class="clue-item note c11">NO TIME</div>
-            <div class="clue-item note c12">!</div>
-        </div>
-
-        <div class="layer-content" id="contentLayer">
-            <div class="title">武汉市中心</div>
-            <div class="countdown-wrapper" id="timer"></div>
-            <div class="footer-text">TARGET: 2026.03.06</div>
-        </div>
-
-    </div>
-
-    <div class="btn-container">
-        <a href="gallery.html" class="ghost-btn">
-            <span>查看线索</span>
-            <span class="arrow-wrapper">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
+    <div id="main-wrapper">
+        <div id="scene">
+            <div class="layer-bg" id="bgLayer">
+                <svg class="string-web">
+                    <line x1="15%" y1="20%" x2="50%" y2="50%" class="web-line"></line>
+                    <line x1="50%" y1="50%" x2="80%" y2="25%" class="web-line"></line>
+                    <line x1="20%" y1="75%" x2="50%" y2="50%" class="web-line"></line>
+                    <line x1="10%" y1="10%" x2="25%" y2="20%" class="web-line"></line>
+                    <line x1="90%" y1="80%" x2="70%" y2="60%" class="web-line"></line>
+                    <line x1="40%" y1="5%" x2="60%" y2="10%" class="web-line"></line>
                 </svg>
-            </span>
-        </a>
+
+                <div class="clue-item photo c1">START</div>
+                <div class="clue-item photo c2">UNKNOWN</div>
+                <div class="clue-item photo c3">2026</div>
+                <div class="clue-item photo c4">TARGET</div>
+                
+                <div class="clue-item note c5">WHO?</div>
+                <div class="clue-item note c6">LOC</div>
+                <div class="clue-item map c7">MAP</div>
+                <div class="clue-item photo c8">KEY</div>
+                
+                <div class="clue-item note c9">?</div>
+                <div class="clue-item photo c10">X</div>
+                <div class="clue-item note c11">NO TIME</div>
+                <div class="clue-item note c12">PLAN</div>
+                
+                <div class="clue-item note c13">A</div>
+                <div class="clue-item note c14">B</div>
+                <div class="clue-item photo c15">EYE</div>
+                <div class="clue-item note c16">!</div>
+                <div class="clue-item map c17">CITY</div>
+                <div class="clue-item photo c18">OLD</div>
+                
+                <div class="clue-item map c19">WUHAN</div>
+                <div class="clue-item photo c20">EVIDENCE</div>
+            </div>
+
+            <div class="layer-content" id="contentLayer">
+                <div class="title">武汉市中心</div>
+                <div class="countdown-wrapper" id="timer"></div>
+                <div class="footer-text">TARGET: 2026.03.06</div>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <a href="gallery.html" class="ghost-btn">
+                <span>查看线索</span>
+                <span class="arrow-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </span>
+            </a>
+        </div>
     </div>
 
     <button id="permission-btn">开启体感</button>
@@ -259,25 +264,24 @@
         setInterval(updateTimer, 1000);
         updateTimer();
 
-        // 穿梭逻辑
+        // 视差与动画
+        const bgLayer = document.getElementById('bgLayer');
+        const contentLayer = document.getElementById('contentLayer');
+        const windowCenterX = window.innerWidth / 2;
+        const windowCenterY = window.innerHeight / 2;
         const linkBtn = document.querySelector('.ghost-btn');
+
         linkBtn.addEventListener('click', function(e) {
             e.preventDefault();
             document.body.classList.add('is-exiting');
             setTimeout(() => { window.location.href = this.href; }, 800);
         });
 
-        // 视差效果
-        const bgLayer = document.getElementById('bgLayer');
-        const contentLayer = document.getElementById('contentLayer');
-        const windowCenterX = window.innerWidth / 2;
-        const windowCenterY = window.innerHeight / 2;
-
         document.addEventListener('mousemove', (e) => {
             const mouseX = e.clientX - windowCenterX;
             const mouseY = e.clientY - windowCenterY;
-            bgLayer.style.transform = `translate(${mouseX/35}px, ${mouseY/35}px)`;
-            contentLayer.style.transform = `translate(${mouseX/-25}px, ${mouseY/-25}px) rotateY(${mouseX/350}deg) rotateX(${-mouseY/350}deg) translateZ(40px)`;
+            bgLayer.style.transform = `translate(${mouseX/30}px, ${mouseY/30}px)`;
+            contentLayer.style.transform = `translate(${mouseX/-20}px, ${mouseY/-20}px) rotateY(${mouseX/300}deg) rotateX(${-mouseY/300}deg) translateZ(30px)`;
         });
 
         function handleOrientation(event) {
@@ -285,7 +289,7 @@
             if (x > 45) x = 45; if (x < -45) x = -45;
             if (y > 45) y = 45; if (y < -45) y = -45;
             bgLayer.style.transform = `translate(${x}px, ${y}px)`;
-            contentLayer.style.transform = `translate(${x * -1.5}px, ${y * -1.5}px) translateZ(40px)`;
+            contentLayer.style.transform = `translate(${x * -1.5}px, ${y * -1.5}px) translateZ(30px)`;
         }
 
         const permBtn = document.getElementById('permission-btn');
