@@ -33,58 +33,82 @@
             overflow: hidden;
         }
 
-        /* --- 3. 背景层：线索墙 --- */
+        /* --- 3. 背景层：混乱线索墙 (大幅升级) --- */
         .layer-bg {
             position: absolute;
-            top: -10%; left: -10%; width: 120%; height: 120%;
+            /* 范围扩大，方便放更多边缘的线索 */
+            top: -15%; left: -15%; width: 130%; height: 130%;
             z-index: 1;
             transform: translateZ(0);
             pointer-events: none;
         }
 
-        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; }
-        .web-line { stroke: var(--accent-red); stroke-width: 1; opacity: 0.5; stroke-dasharray: 5,5; }
+        /* 红线网：更密集 */
+        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; }
+        .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.6; stroke-dasharray: 0; }
 
+        /* 线索通用样式 */
         .clue-item {
             position: absolute;
-            background: #f0f0f0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
-            filter: grayscale(100%) brightness(0.4); 
-            border: 1px solid #333;
+            background: #f4f4f4;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            /* 默认都很暗，保证不抢文字 */
+            filter: grayscale(100%) brightness(0.35) contrast(1.2); 
+            border: 1px solid #222;
             display: flex; justify-content: center; align-items: center;
             font-family: "Courier New", monospace; color: #111; font-weight: bold;
-            font-size: 0.6rem; overflow: hidden;
+            font-size: 0.5rem; overflow: hidden;
+            /* 增加一点纸张的粗糙纹理 */
+            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
-        .clue-item::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.2; }
         
-        .c1 { top: 15%; left: 10%; width: 120px; height: 150px; transform: rotate(-5deg); }
-        .c2 { top: 20%; right: 15%; width: 140px; height: 100px; transform: rotate(3deg); }
-        .c3 { bottom: 25%; left: 20%; width: 100px; height: 120px; transform: rotate(8deg); }
-        .c4 { bottom: 10%; right: 10%; width: 160px; height: 110px; transform: rotate(-2deg); }
-        .c5 { top: 50%; left: 50%; width: 220px; height: 160px; transform: translate(-120%, -120%) rotate(-15deg); opacity: 0.3; z-index: -1; }
+        /* 模拟照片黑框 */
+        .clue-item.photo::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.3; }
+        /* 模拟便签纸 */
+        .clue-item.note { background: #fffff0; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .clue-item.map { background: #e0e0e0; border: 2px solid #555; }
 
-        /* --- 4. 前景层：文字内容 --- */
+        /* --- 🔥 混乱布局定义 (13个点位) --- */
+        /* 左上区 */
+        .c1 { top: 15%; left: 10%; width: 120px; height: 150px; transform: rotate(-8deg); z-index: 2; }
+        .c6 { top: 5%; left: 25%; width: 80px; height: 80px; transform: rotate(15deg); z-index: 1; } /* 便签 */
+        .c10 { top: 25%; left: 5%; width: 160px; height: 100px; transform: rotate(5deg); z-index: 0; opacity: 0.5; filter: blur(1px) brightness(0.2) !important; } /* 远景地图 */
+
+        /* 右上区 */
+        .c2 { top: 18%; right: 15%; width: 140px; height: 100px; transform: rotate(6deg); z-index: 2; }
+        .c7 { top: 10%; right: 30%; width: 90px; height: 120px; transform: rotate(-12deg); z-index: 1; }
+        .c11 { top: 5%; right: 5%; width: 100px; height: 100px; transform: rotate(20deg); z-index: 0; }
+
+        /* 左下区 */
+        .c3 { bottom: 20%; left: 20%; width: 100px; height: 130px; transform: rotate(12deg); z-index: 2; }
+        .c8 { bottom: 35%; left: 8%; width: 110px; height: 90px; transform: rotate(-5deg); z-index: 1; }
+        .c12 { bottom: 10%; left: 35%; width: 70px; height: 70px; transform: rotate(45deg); z-index: 3; } /* 小纸片 */
+
+        /* 右下区 */
+        .c4 { bottom: 15%; right: 12%; width: 150px; height: 110px; transform: rotate(-6deg); z-index: 2; }
+        .c9 { bottom: 30%; right: 28%; width: 100px; height: 140px; transform: rotate(8deg); z-index: 1; }
+
+        /* 中间背景区 (模糊处理，增加景深) */
+        .c5 { top: 50%; left: 50%; width: 250px; height: 180px; transform: translate(-50%, -50%) rotate(-10deg); opacity: 0.2; z-index: -1; filter: blur(2px) grayscale(100%) !important; }
+        .c13 { top: 40%; left: 60%; width: 180px; height: 120px; transform: translate(-50%, -50%) rotate(5deg); opacity: 0.15; z-index: -2; filter: blur(3px) grayscale(100%) !important; }
+
+        /* --- 4. 前景层：文字 --- */
         .layer-content {
-            position: relative;
-            z-index: 10;
+            position: relative; z-index: 10;
             text-align: center;
-            text-shadow: 0 0 20px rgba(0,0,0,0.9); /* 增强文字阴影，自带发光感 */
-            transform: translateZ(30px);
+            text-shadow: 0 0 30px rgba(0,0,0,1); /* 加重文字阴影，防止背景太乱看不清 */
+            transform: translateZ(40px);
         }
 
         .title {
-            font-size: 1.4rem;
-            letter-spacing: 0.3em;
-            margin-bottom: 5vh;
-            font-weight: 300;
-            opacity: 0.9;
-            position: relative;
-            display: inline-block;
+            font-size: 1.4rem; letter-spacing: 0.3em; margin-bottom: 5vh;
+            font-weight: 300; opacity: 0.95; position: relative; display: inline-block;
         }
         .title::after {
             content: ''; display: block; width: 40px; height: 1px; 
-            background: #888; margin: 15px auto 0;
-            box-shadow: 0 0 8px rgba(255,255,255,0.2); /* 装饰线也发光 */
+            background: #aaa; margin: 15px auto 0;
+            box-shadow: 0 0 8px rgba(255,255,255,0.3);
         }
 
         .countdown-wrapper { display: flex; flex-direction: column; gap: 1.5vh; }
@@ -92,135 +116,107 @@
         .unit-label { font-size: 0.9rem; font-style: italic; opacity: 0.6; margin-left: 8px; font-weight: normal; font-family: "Georgia", serif; }
         .footer-text { margin-top: 6vh; font-size: 0.8rem; letter-spacing: 0.2em; opacity: 0.5; }
 
-        /* --- 5. ✨ 高级幽灵按钮 (带发光和箭头动画) --- */
+        /* --- 5. 穿越特效 CSS --- */
+        body.is-exiting { pointer-events: none; }
+        body.is-exiting .layer-bg {
+            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1);
+            transform: scale(8) translateZ(0) !important; /* 放大倍数稍微减小一点，因为现在东西多了 */
+            opacity: 0;
+        }
+        body.is-exiting .layer-content {
+            transition: all 0.5s ease-in;
+            transform: scale(0.8) translateZ(-100px) !important;
+            opacity: 0; filter: blur(10px);
+        }
+        body.is-exiting .btn-container { transition: opacity 0.3s; opacity: 0; }
+
+        /* --- 6. 按钮样式 --- */
         .btn-container {
             position: fixed; bottom: 50px; left: 0; width: 100%;
-            text-align: center; z-index: 20;
-            pointer-events: none; /* 容器不挡鼠标 */
+            text-align: center; z-index: 20; pointer-events: none;
         }
-
         .ghost-btn {
-            pointer-events: auto; /* 按钮本身接收鼠标 */
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 32px;
-            font-size: 0.85rem;
-            letter-spacing: 0.2em;
-            color: rgba(255, 255, 255, 0.6);
-            text-decoration: none;
+            pointer-events: auto; display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.6); text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(0,0,0,0.4); /* 半透明黑底 */
-            backdrop-filter: blur(4px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); /* 丝滑缓动 */
+            background: rgba(0,0,0,0.6); /* 按钮底色加深，防止背景太乱干扰 */
+            backdrop-filter: blur(4px); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
-
-        /* 悬停状态：发光 + 放大 + 变亮 */
         .ghost-btn:hover {
-            border-color: rgba(255, 255, 255, 0.9);
-            color: #fff;
+            border-color: rgba(255, 255, 255, 0.9); color: #fff;
             background-color: rgba(255, 255, 255, 0.1);
-            /* 🔥 核心光晕效果 🔥 */
             box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255,255,255,0.05);
             transform: translateY(-2px) scale(1.02);
         }
-
-        .ghost-btn:active { transform: translateY(0) scale(0.98); }
-
-        /* 箭头容器：默认隐藏 */
         .arrow-wrapper {
-            width: 0;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateX(-5px);
-            transition: all 0.4s ease-out;
-            display: flex; align-items: center;
+            width: 0; overflow: hidden; opacity: 0; transform: translateX(-5px);
+            transition: all 0.4s ease-out; display: flex; align-items: center;
         }
+        .ghost-btn:hover .arrow-wrapper { width: 16px; margin-left: 10px; opacity: 1; transform: translateX(0); }
 
-        /* 悬停时：箭头滑出 */
-        .ghost-btn:hover .arrow-wrapper {
-            width: 16px; margin-left: 10px; opacity: 1; transform: translateX(0);
-        }
-
-        /* 权限按钮也加一点样式 */
         #permission-btn {
             display: none; position: fixed; top: 20px; right: 20px; z-index: 50;
             background: rgba(0, 0, 0, 0.5); border: 1px solid #cc2222;
             color: #ff5555; padding: 8px 15px; font-size: 0.7rem; cursor: pointer;
             backdrop-filter: blur(2px); transition: 0.3s;
         }
-        #permission-btn:hover { box-shadow: 0 0 15px rgba(204, 34, 34, 0.5); color: #fff; }
 
-        /* --- 6. 响应式适配 --- */
+        /* --- 7. 适配 --- */
         @media (min-width: 768px) {
             .title { font-size: 2rem; margin-bottom: 8vh; }
             .countdown-wrapper { flex-direction: row; gap: 50px; }
             .time-unit { font-size: 5rem; }
             .unit-label { font-size: 1.2rem; }
-            .clue-item { filter: grayscale(100%) brightness(0.3); }
+            .clue-item { filter: grayscale(100%) brightness(0.25) contrast(1.2); } /* 电脑上更暗一点 */
         }
-
         @media (max-width: 767px) {
-            .clue-item { filter: grayscale(100%) brightness(0.45); }
-            .c2, .c4 { opacity: 0; }
-        }
-
-        /* --- 7. 🚀 穿越特效 (Shuttle Effect) --- */
-        
-        /* 状态 A: 正在穿越中 */
-        body.is-exiting {
-            pointer-events: none; /* 禁止再次点击 */
-        }
-
-        /* 1. 背景层：猛烈放大，仿佛冲进去 */
-        body.is-exiting .layer-bg {
-            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1); /* 加速曲线 */
-            transform: scale(15) translateZ(0) !important; /* 放大15倍 */
-            opacity: 0; /* 最后变黑 */
-        }
-
-        /* 2. 文字层：迅速模糊并后退消失 */
-        body.is-exiting .layer-content {
-            transition: all 0.5s ease-in;
-            transform: scale(0.8) translateZ(-100px) !important;
-            opacity: 0;
-            filter: blur(10px);
-        }
-
-        /* 3. 按钮：瞬间消失 */
-        body.is-exiting .btn-container {
-            transition: opacity 0.3s;
-            opacity: 0;
+            /* 手机上隐藏最边缘的几个，防止溢出太多 */
+            .c10, .c11, .c12 { display: none; }
         }
     </style>
 </head>
 <body>
 
     <div id="scene">
-        <!-- 线索墙背景 -->
+        
         <div class="layer-bg" id="bgLayer">
             <svg class="string-web">
-                <line x1="15%" y1="20%" x2="50%" y2="50%" class="web-line"></line>
-                <line x1="50%" y1="50%" x2="80%" y2="25%" class="web-line"></line>
-                <line x1="20%" y1="75%" x2="50%" y2="50%" class="web-line"></line>
+                <line x1="10%" y1="15%" x2="50%" y2="50%" class="web-line"></line>
+                <line x1="90%" y1="18%" x2="50%" y2="50%" class="web-line"></line>
+                <line x1="20%" y1="80%" x2="50%" y2="50%" class="web-line"></line>
+                <line x1="25%" y1="5%" x2="10%" y2="15%" class="web-line"></line>
+                <line x1="88%" y1="85%" x2="60%" y2="40%" class="web-line"></line>
+                <line x1="30%" y1="10%" x2="70%" y2="10%" class="web-line"></line>
             </svg>
-            <div class="clue-item c1">START</div>
-            <div class="clue-item c2">UNKNOWN</div>
-            <div class="clue-item c3">2026</div>
-            <div class="clue-item c4">TARGET</div>
-            <div class="clue-item c5">WUHAN</div>
+
+            <div class="clue-item photo c1">EVIDENCE</div>
+            <div class="clue-item photo c2">SUSPECT</div>
+            <div class="clue-item photo c3">2026.03</div>
+            <div class="clue-item photo c4">TARGET</div>
+
+            <div class="clue-item map c5">MAP WUHAN</div>
+            <div class="clue-item map c13">PLAN B</div>
+
+            <div class="clue-item note c6">???</div>
+            <div class="clue-item photo c7">UNKNOWN</div>
+            <div class="clue-item note c8">LOC</div>
+            <div class="clue-item photo c9">KEY</div>
+            
+            <div class="clue-item map c10">AREA 51</div>
+            <div class="clue-item note c11">NO TIME</div>
+            <div class="clue-item note c12">!</div>
         </div>
 
-        <!-- 文字内容 -->
         <div class="layer-content" id="contentLayer">
             <div class="title">武汉市中心</div>
             <div class="countdown-wrapper" id="timer"></div>
             <div class="footer-text">TARGET: 2026.03.06</div>
         </div>
+
     </div>
 
-    <!-- 底部按钮：带箭头动画和光晕 -->
     <div class="btn-container">
         <a href="gallery.html" class="ghost-btn">
             <span>查看线索</span>
@@ -236,18 +232,16 @@
     <button id="permission-btn">开启体感</button>
 
     <script>
-        // 1. 倒计时
+        // 倒计时
         const targetDate = new Date("2026-03-06T00:00:00").getTime();
         function updateTimer() {
             const now = new Date().getTime();
             const difference = targetDate - now;
             const timerElement = document.getElementById('timer');
-
             if (difference < 0) {
                 timerElement.innerHTML = "<div class='time-unit'>ARRIVED</div>";
                 return;
             }
-
             const days = Math.floor(difference / (1000 * 60 * 60 * 24));
             const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
@@ -255,7 +249,6 @@
             const fHours = hours < 10 ? "0" + hours : hours;
             const fMinutes = minutes < 10 ? "0" + minutes : minutes;
             const fSeconds = seconds < 10 ? "0" + seconds : seconds;
-
             timerElement.innerHTML = `
                 <div class="time-unit">${days}<span class="unit-label">天</span></div>
                 <div class="time-unit">${fHours}<span class="unit-label">时</span></div>
@@ -266,7 +259,15 @@
         setInterval(updateTimer, 1000);
         updateTimer();
 
-        // 2. 视差
+        // 穿梭逻辑
+        const linkBtn = document.querySelector('.ghost-btn');
+        linkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.add('is-exiting');
+            setTimeout(() => { window.location.href = this.href; }, 800);
+        });
+
+        // 视差效果
         const bgLayer = document.getElementById('bgLayer');
         const contentLayer = document.getElementById('contentLayer');
         const windowCenterX = window.innerWidth / 2;
@@ -275,8 +276,8 @@
         document.addEventListener('mousemove', (e) => {
             const mouseX = e.clientX - windowCenterX;
             const mouseY = e.clientY - windowCenterY;
-            bgLayer.style.transform = `translate(${mouseX/30}px, ${mouseY/30}px)`;
-            contentLayer.style.transform = `translate(${mouseX/-20}px, ${mouseY/-20}px) rotateY(${mouseX/300}deg) rotateX(${-mouseY/300}deg) translateZ(30px)`;
+            bgLayer.style.transform = `translate(${mouseX/35}px, ${mouseY/35}px)`;
+            contentLayer.style.transform = `translate(${mouseX/-25}px, ${mouseY/-25}px) rotateY(${mouseX/350}deg) rotateX(${-mouseY/350}deg) translateZ(40px)`;
         });
 
         function handleOrientation(event) {
@@ -284,10 +285,9 @@
             if (x > 45) x = 45; if (x < -45) x = -45;
             if (y > 45) y = 45; if (y < -45) y = -45;
             bgLayer.style.transform = `translate(${x}px, ${y}px)`;
-            contentLayer.style.transform = `translate(${x * -1.5}px, ${y * -1.5}px) translateZ(30px)`;
+            contentLayer.style.transform = `translate(${x * -1.5}px, ${y * -1.5}px) translateZ(40px)`;
         }
 
-        // 3. 权限
         const permBtn = document.getElementById('permission-btn');
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
             permBtn.style.display = 'block';
@@ -302,21 +302,6 @@
         } else {
             window.addEventListener('deviceorientation', handleOrientation);
         }
-
-        // --- 4. 🚀 穿越跳转逻辑 ---
-        const linkBtn = document.querySelector('.ghost-btn');
-        
-        linkBtn.addEventListener('click', function(e) {
-            e.preventDefault(); // 1. 阻止立即跳转
-            
-            // 2. 给 body 加上“正在穿越”的标签，触发 CSS 动画
-            document.body.classList.add('is-exiting');
-
-            // 3. 等待 800毫秒（动画播完）后，再真正跳转
-            setTimeout(() => {
-                window.location.href = this.href;
-            }, 800);
-        });
     </script>
 </body>
 </html>
