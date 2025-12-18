@@ -157,7 +157,7 @@
             body { cursor: auto; }
             .spotlight-overlay, .magnifier-rim { display: none; }
             .board-container { gap: 120px; padding-bottom: 120px; padding-top: 50px; }
-            .clue-card { width: 75%; filter: brightness(0.9) grayscale(100%); }
+            .clue-card { width: 75%; filter: brightness(0.9) grayscale(100%); padding: 15px 15px 20px 15px;}
             .photo-area { height: 200px; }
             .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 20px; margin-right: 0; transform: rotate(-2deg); }
             .clue-card:nth-child(even) { align-self: flex-end; margin-right: 20px; margin-left: 0; transform: rotate(2deg); margin-top: 0; }
@@ -196,6 +196,45 @@
             .g27 { position: absolute; width: 90px; height: 90px; top: 150%; left: 10%; transform: rotate(30deg); }
             .g13, .g14, .g15, .g17, .g18, .g19, .g21 { opacity: 0.4 !important; filter: blur(2px) !important; z-index: -2; }
             .g15 { width: 200px; height: 150px; top: 50%; left: 10%; transform: rotate(10deg); }
+            /* --- 修复底部元素堆叠问题 (g28 - g32) --- */
+            /* 将它们拉开距离，铺在页面的更深处 */
+
+            /* g28 (WHY) - 放在左侧深处 */
+            .g28 { 
+                width: 80px; height: 80px; 
+                top: 160%; left: 8%; 
+                transform: rotate(15deg); 
+            }
+
+            /* g29 (99%) - 放在右侧深处 */
+            .g29 { 
+                width: 100px; height: 140px; 
+                top: 165%; right: 5%; 
+                transform: rotate(-10deg); 
+            }
+
+            /* g30 (ROAD) - 放在中间偏左 */
+            .g30 { 
+                width: 120px; height: 90px; 
+                top: 175%; left: 25%; 
+                transform: rotate(5deg); 
+            }
+
+            /* g31 (HELP) - 放在左下角极深处 */
+            .g31 { 
+                width: 70px; height: 70px; 
+                top: 185%; left: 5%; 
+                transform: rotate(-20deg); 
+            }
+
+            /* g32 (END) - 瀑布流的终点 */
+            .g32 { 
+                width: 130px; height: 160px; 
+                top: 190%; right: 10%; 
+                transform: rotate(12deg); 
+            }
+        
+        
         }
     </style>
 </head>
@@ -244,7 +283,7 @@
             <div class="bg-clue map g13" data-speed="0.05">RIVER</div>
             <div class="bg-clue note g14" data-speed="0.4">NO!</div>
             <div class="bg-clue map g15" data-speed="0.02">MAP</div>
-            <div class="bg-clue note g16" data-speed="0.8">1998</div>
+            <div class="bg-clue note g16" data-speed="0.8">2026</div>
             <div class="bg-clue photo g17" data-speed="0.25">RUN</div>
             <div class="bg-clue note g18" data-speed="0.55">ZIP</div>
             <div class="bg-clue photo g19" data-speed="0.1">???</div>
