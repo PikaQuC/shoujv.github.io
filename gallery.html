@@ -22,7 +22,7 @@
             cursor: none; min-height: 100vh;
         }
 
-        /* --- 2. 核心容器与动画 --- */
+        /* --- 2. 核心容器 --- */
         #main-wrapper {
             position: relative; z-index: 10; width: 100%;
             animation: landIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -33,16 +33,16 @@
             transform: scale(0.6) translateZ(-500px); opacity: 0; filter: blur(10px);
         }
 
-        /* --- 3. 背景层：混乱线索墙 --- */
+        /* --- 3. 背景层 (Fixed) --- */
         .layer-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none; overflow: hidden;
         }
 
-        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; }
-        .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.5; stroke-dasharray: 0; }
+        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; }
+        .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.4; stroke-dasharray: 0; }
 
-        /* 电脑端默认样式 (很暗，配合手电筒) */
+        /* 背景碎片样式 */
         .bg-clue {
             position: absolute;
             background: #f4f4f4; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
@@ -50,26 +50,44 @@
             border: 1px solid #222;
             display: flex; justify-content: center; align-items: center;
             font-family: "Courier New", monospace; color: #111; font-weight: bold;
-            font-size: 0.5rem; overflow: hidden;
+            font-size: 0.8rem; /* 字体稍微加大 */
+            overflow: hidden;
             background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
+            will-change: transform; 
         }
         .bg-clue.photo::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.3; }
         .bg-clue.note { background: #fffff0; border: none; }
+        .bg-clue.map { background: #dcdcdc; border: 2px solid #555; }
 
-        /* 背景布局 */
-        .g1 { top: 10%; left: 5%; width: 100px; height: 140px; transform: rotate(15deg); }
-        .g2 { top: 15%; right: 8%; width: 120px; height: 100px; transform: rotate(-10deg); }
-        .g3 { top: 40%; left: -2%; width: 90px; height: 110px; transform: rotate(-25deg); }
-        .g4 { top: 35%; right: -2%; width: 140px; height: 90px; transform: rotate(5deg); }
-        .g5 { bottom: 20%; left: 8%; width: 110px; height: 150px; transform: rotate(8deg); }
-        .g6 { bottom: 15%; right: 5%; width: 100px; height: 120px; transform: rotate(-12deg); }
-        .g7 { top: 5%; left: 40%; width: 80px; height: 80px; transform: rotate(45deg); opacity: 0.5; }
-        .g8 { bottom: 5%; right: 40%; width: 150px; height: 100px; transform: rotate(-5deg); opacity: 0.5; }
-        .g9 { top: 60%; left: 15%; width: 60px; height: 60px; transform: rotate(20deg); }
-        .g10 { top: 55%; right: 15%; width: 70px; height: 90px; transform: rotate(-15deg); }
+        /* --- 🔥 电脑端布局 (整体尺寸放大 1.6倍左右) --- */
+        .g1 { top: 5%; left: 5%; width: 160px; height: 220px; transform: rotate(15deg); }
+        .g2 { top: 10%; right: 8%; width: 190px; height: 160px; transform: rotate(-10deg); }
+        .g3 { top: 35%; left: -2%; width: 140px; height: 170px; transform: rotate(-25deg); }
+        .g4 { top: 30%; right: -2%; width: 220px; height: 140px; transform: rotate(5deg); }
+        .g5 { bottom: 15%; left: 8%; width: 170px; height: 230px; transform: rotate(8deg); }
+        .g6 { bottom: 10%; right: 5%; width: 160px; height: 190px; transform: rotate(-12deg); }
+        .g7 { top: 2%; left: 40%; width: 130px; height: 130px; transform: rotate(45deg); opacity: 0.5; }
+        .g8 { bottom: 2%; right: 40%; width: 240px; height: 160px; transform: rotate(-5deg); opacity: 0.5; }
+        .g9 { top: 55%; left: 15%; width: 100px; height: 100px; transform: rotate(20deg); }
+        .g10 { top: 50%; right: 15%; width: 110px; height: 140px; transform: rotate(-15deg); }
+        
+        .g11 { top: 20%; left: 25%; width: 130px; height: 130px; transform: rotate(30deg); }
+        .g12 { top: 25%; right: 25%; width: 140px; height: 190px; transform: rotate(-5deg); }
+        .g13 { bottom: 40%; left: 10%; width: 160px; height: 130px; transform: rotate(-15deg); }
+        .g14 { bottom: 35%; right: 12%; width: 110px; height: 110px; transform: rotate(10deg); }
+        /* 远景特大图 */
+        .g15 { top: 45%; left: 50%; width: 250px; height: 190px; transform: translate(-50%, -50%) rotate(2deg); opacity: 0.3; filter: blur(3px) !important; z-index: -1; }
+        
+        .g16 { top: 5%; left: 60%; width: 80px; height: 80px; transform: rotate(15deg); }
+        .g17 { bottom: 5%; left: 25%; width: 190px; height: 140px; transform: rotate(-8deg); }
+        .g18 { top: 70%; right: 5%; width: 100px; height: 160px; transform: rotate(25deg); }
+        .g19 { top: 80%; left: -5%; width: 170px; height: 130px; transform: rotate(-20deg); }
+        .g20 { top: 15%; left: 50%; width: 70px; height: 70px; transform: rotate(45deg); }
+        .g21 { bottom: 25%; right: 35%; width: 130px; height: 170px; transform: rotate(12deg); }
+        .g22 { top: 60%; left: 80%; width: 90px; height: 90px; transform: rotate(-30deg); }
 
-        /* --- 4. 前景 --- */
+        /* --- 4. 前景内容 --- */
         header { position: relative; z-index: 10; text-align: center; padding: 80px 20px 50px; }
         h1 { 
             letter-spacing: 0.5em; font-weight: 300; font-size: 2rem; opacity: 0.95;
@@ -99,107 +117,70 @@
         .clue-card:nth-child(even) { align-self: flex-end; margin-right: 5%; transform: rotate(2deg); margin-top: 50px; }
         .clue-card:nth-child(3) { align-self: center; transform: rotate(1deg); margin-left: 0; margin-right: 0; }
 
-        .clue-card:hover {
-            transform: scale(1.1) rotate(0deg) !important; z-index: 50;
-            filter: brightness(1) grayscale(0%);
-        }
-        .clue-card.mobile-active {
-            filter: brightness(1) grayscale(0%); transform: scale(1.05) !important; z-index: 50;
-            box-shadow: 0 0 30px rgba(255,255,255,0.15);
-        }
+        .clue-card:hover { transform: scale(1.1) rotate(0deg) !important; z-index: 50; filter: brightness(1) grayscale(0%); }
+        .clue-card.mobile-active { filter: brightness(1) grayscale(0%); transform: scale(1.05) !important; z-index: 50; box-shadow: 0 0 30px rgba(255,255,255,0.15); }
 
         .photo-area { width: 100%; height: 350px; background: #111; overflow: hidden; border: 1px solid #ccc; display: block; }
         .photo-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-        .pin {
-            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            width: 16px; height: 16px; background: #555; border-radius: 50%; z-index: 10;
-        }
+        .pin { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px; background: #555; border-radius: 50%; z-index: 10; }
         .clue-card:hover .pin, .clue-card.mobile-active .pin { background-color: #cc2222; box-shadow: 0 0 15px #cc2222; }
-
-        .note {
-            margin-top: 20px; color: #222; font-family: "Courier New", monospace;
-            font-size: 1.1rem; text-align: center; font-weight: bold;
-            text-shadow: 0 1px 1px rgba(255,255,255,0.8);
-        }
+        .note { margin-top: 20px; color: #222; font-family: "Courier New", monospace; font-size: 1.1rem; text-align: center; font-weight: bold; text-shadow: 0 1px 1px rgba(255,255,255,0.8); }
 
         /* --- 5. 交互层 --- */
-        .spotlight-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            pointer-events: none; z-index: 100;
-            background: radial-gradient(circle var(--spotlight-size) at var(--mouse-x) var(--mouse-y), transparent 0%, rgba(5, 5, 5, 0.98) 100%);
-            will-change: background;
-        }
-
-        .magnifier-rim {
-            position: fixed; top: 0; left: 0;
-            width: calc(var(--spotlight-size) * 2); height: calc(var(--spotlight-size) * 2);
-            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
-            pointer-events: none; z-index: 101;
-            transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%));
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1);
-        }
-
-        #connection-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
-        }
+        .spotlight-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 100; background: radial-gradient(circle var(--spotlight-size) at var(--mouse-x) var(--mouse-y), transparent 0%, rgba(5, 5, 5, 0.98) 100%); will-change: background; }
+        .magnifier-rim { position: fixed; top: 0; left: 0; width: calc(var(--spotlight-size) * 2); height: calc(var(--spotlight-size) * 2); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; pointer-events: none; z-index: 101; transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%)); box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1); }
+        #connection-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         .clue-line { stroke: rgba(255, 255, 255, 0.15); stroke-width: 2; fill: none; stroke-dasharray: 8, 8; }
 
         /* --- 6. 底部控件 --- */
-        .footer-nav {
-            position: fixed; bottom: 40px; left: 0; width: 100%;
-            text-align: center; z-index: 120; pointer-events: none;
-        }
-        .ghost-btn {
-            pointer-events: auto; display: inline-flex; align-items: center; justify-content: center;
-            padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em;
-            color: rgba(255, 255, 255, 0.6); text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
-            flex-direction: row-reverse; 
-        }
-        .ghost-btn:hover {
-            border-color: rgba(255, 255, 255, 0.9); color: #fff;
-            background-color: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255,255,255,0.05);
-            transform: translateY(-2px) scale(1.02);
-        }
-        .arrow-wrapper {
-            width: 0; overflow: hidden; opacity: 0; transform: translateX(5px);
-            transition: all 0.4s ease-out; display: flex; align-items: center;
-        }
+        .footer-nav { position: fixed; bottom: 40px; left: 0; width: 100%; text-align: center; z-index: 120; pointer-events: none; }
+        .ghost-btn { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.6); text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; flex-direction: row-reverse; }
+        .ghost-btn:hover { border-color: rgba(255, 255, 255, 0.9); color: #fff; background-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255,255,255,0.05); transform: translateY(-2px) scale(1.02); }
+        .arrow-wrapper { width: 0; overflow: hidden; opacity: 0; transform: translateX(5px); transition: all 0.4s ease-out; display: flex; align-items: center; }
         .ghost-btn:hover .arrow-wrapper { width: 16px; margin-right: 10px; opacity: 1; transform: translateX(0); }
 
-        @keyframes landIn {
-            0% { opacity: 0; transform: scale(1.2); filter: blur(8px); }
-            100% { opacity: 1; transform: scale(1); filter: blur(0); }
-        }
+        @keyframes landIn { 0% { opacity: 0; transform: scale(1.2); filter: blur(8px); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
 
-        /* --- 7. 🔥 手机适配 (核心修复) --- */
+        /* --- 7. 🔥 手机适配 (保持之前的大尺寸设定) --- */
         @media (max-width: 768px) {
             body { cursor: auto; }
             .spotlight-overlay, .magnifier-rim { display: none; }
-            
             .board-container { gap: 120px; padding-bottom: 120px; padding-top: 50px; }
             .clue-card { width: 75%; filter: brightness(0.9) grayscale(100%); }
             .photo-area { height: 200px; }
-
             .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 20px; margin-right: 0; transform: rotate(-2deg); }
             .clue-card:nth-child(even) { align-self: flex-end; margin-right: 20px; margin-left: 0; transform: rotate(2deg); margin-top: 0; }
             .clue-card:nth-child(3) { align-self: flex-start; margin-left: 20px; transform: rotate(-1deg); }
 
-            /* 🔥 修复背景不可见的问题 */
+            /* 手机背景高亮 */
             .bg-clue {
-                /* 手机上强制提高不透明度 */
                 opacity: 0.8 !important; 
-                /* 手机上大幅提高亮度，去掉模糊，确保清晰可见 */
-                filter: grayscale(100%) brightness(0.7) contrast(1.0) blur(0px) !important;
+                filter: grayscale(100%) brightness(0.8) contrast(1.0) blur(0px) !important;
+                transform: translate3d(0,0,0);
+                font-size: 0.9rem;
             }
+
+            /* 手机背景混乱布局 (覆盖电脑端的设定) */
+            .g1 { width: 160px; height: 220px; top: 5%; left: -10%; transform: rotate(10deg); }
+            .g2 { width: 140px; height: 120px; top: 12%; right: -5%; transform: rotate(-8deg); }
+            .g3 { width: 120px; height: 140px; top: 45%; left: -8%; transform: rotate(-15deg); display: flex !important; }
+            .g4 { width: 150px; height: 100px; top: 40%; right: -10%; transform: rotate(5deg); display: flex !important; }
+            .g5 { width: 130px; height: 180px; bottom: 25%; left: 5%; transform: rotate(6deg); }
+            .g6 { width: 120px; height: 140px; bottom: 18%; right: 2%; transform: rotate(-10deg); }
+            .g7 { width: 100px; height: 100px; top: 2%; left: 45%; opacity: 0.6 !important; }
+            .g8 { width: 180px; height: 120px; bottom: 5%; right: 30%; opacity: 0.6 !important; }
+            .g9 { width: 90px; height: 90px; top: 65%; left: 10%; transform: rotate(20deg); display: flex !important; }
+            .g10 { width: 100px; height: 130px; top: 60%; right: 10%; transform: rotate(-15deg); display: flex !important; }
+            .g11 { width: 100px; height: 100px; top: 18%; left: 5%; transform: rotate(15deg); display: flex !important; }
+            .g20 { width: 60px; height: 60px; top: 22%; right: 40%; transform: rotate(45deg); display: flex !important; }
+            .g12 { width: 120px; height: 150px; top: 38%; left: 30%; transform: rotate(8deg); display: flex !important; z-index: -1; opacity: 0.6 !important; }
+            .g22 { width: 70px; height: 70px; top: 62%; left: 50%; transform: rotate(-30deg); display: flex !important; }
             
-            /* 稍微隐藏一些太靠边的元素，防止手机屏幕看起来太乱 */
-            .g3, .g4 { display: none; }
+            /* 深层元素 */
+            .g13, .g14, .g15, .g17, .g18, .g19, .g21 { 
+                opacity: 0.4 !important; filter: blur(2px) !important; z-index: -2;
+            }
+            .g15 { width: 200px; height: 150px; top: 50%; left: 10%; transform: rotate(10deg); display: flex !important; }
         }
     </style>
 </head>
@@ -209,25 +190,38 @@
     <div class="magnifier-rim"></div>
 
     <div id="main-wrapper">
-        
-        <div class="layer-bg">
+        <div class="layer-bg" id="bgLayer">
             <svg class="string-web">
                 <line x1="0%" y1="10%" x2="100%" y2="20%" class="web-line"></line>
                 <line x1="80%" y1="0%" x2="90%" y2="100%" class="web-line"></line>
                 <line x1="20%" y1="0%" x2="10%" y2="100%" class="web-line"></line>
                 <line x1="0%" y1="80%" x2="100%" y2="90%" class="web-line"></line>
+                <line x1="50%" y1="0%" x2="60%" y2="100%" class="web-line"></line>
             </svg>
 
-            <div class="bg-clue photo g1">EVIDENCE</div>
-            <div class="bg-clue note g2">???</div>
-            <div class="bg-clue photo g3">OLD</div>
-            <div class="bg-clue photo g4">KEY</div>
-            <div class="bg-clue note g5">LOC</div>
-            <div class="bg-clue photo g6">TARGET</div>
-            <div class="bg-clue note g7">!</div>
-            <div class="bg-clue note g8">PLAN</div>
-            <div class="bg-clue photo g9">X</div>
-            <div class="bg-clue photo g10">03.06</div>
+            <div class="bg-clue photo g1" data-speed="0.2">EVIDENCE</div>
+            <div class="bg-clue note g2" data-speed="0.5">???</div>
+            <div class="bg-clue photo g3" data-speed="0.1">OLD</div>
+            <div class="bg-clue photo g4" data-speed="0.6">KEY</div>
+            <div class="bg-clue note g5" data-speed="0.3">LOC</div>
+            <div class="bg-clue photo g6" data-speed="0.4">TARGET</div>
+            <div class="bg-clue note g7" data-speed="0.7">!</div>
+            <div class="bg-clue note g8" data-speed="0.2">PLAN</div>
+            <div class="bg-clue photo g9" data-speed="0.5">X</div>
+            <div class="bg-clue photo g10" data-speed="0.3">03.06</div>
+
+            <div class="bg-clue note g11" data-speed="0.6">WHO?</div>
+            <div class="bg-clue photo g12" data-speed="0.15">EYE</div>
+            <div class="bg-clue map g13" data-speed="0.05">RIVER</div>
+            <div class="bg-clue note g14" data-speed="0.4">NO!</div>
+            <div class="bg-clue map g15" data-speed="0.02">MAP</div>
+            <div class="bg-clue note g16" data-speed="0.8">1998</div>
+            <div class="bg-clue photo g17" data-speed="0.25">RUN</div>
+            <div class="bg-clue note g18" data-speed="0.55">ZIP</div>
+            <div class="bg-clue photo g19" data-speed="0.1">???</div>
+            <div class="bg-clue note g20" data-speed="0.9">A</div>
+            <div class="bg-clue photo g21" data-speed="0.2">LOST</div>
+            <div class="bg-clue note g22" data-speed="0.7">FOUND</div>
         </div>
 
         <svg id="connection-layer"></svg>
@@ -240,7 +234,7 @@
                 <div class="photo-area">
                     <img src="https://raw.githubusercontent.com/PikaQuC/shoujv.github.io/main/image/a999e19f47bcc427198ccc746f0b47eb.png" alt="证据1">
                 </div>
-                <div class="note">起点：2024</div>
+                <div class="note">起点：2025</div>
             </div>
             <div class="clue-card" id="card2"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">迷雾</div></div>
             <div class="clue-card" id="card3"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">转折点</div></div>
@@ -262,7 +256,6 @@
 
     <script>
         const root = document.documentElement;
-
         const linkBtn = document.querySelector('.ghost-btn');
         linkBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -313,7 +306,43 @@
                 }
             }
         }
-        
+
+        const bgClues = document.querySelectorAll('.bg-clue');
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            bgClues.forEach(clue => {
+                const speed = clue.getAttribute('data-speed');
+                const yPos = scrollY * speed * -0.5;
+                clue.style.transform = `translate3d(0, ${yPos}px, 0) ${getRotation(clue)}`;
+            });
+        });
+
+        function getRotation(element) {
+            if(element.classList.contains('g1')) return 'rotate(15deg)';
+            if(element.classList.contains('g2')) return 'rotate(-10deg)';
+            if(element.classList.contains('g3')) return 'rotate(-25deg)';
+            if(element.classList.contains('g4')) return 'rotate(5deg)';
+            if(element.classList.contains('g5')) return 'rotate(8deg)';
+            if(element.classList.contains('g6')) return 'rotate(-12deg)';
+            if(element.classList.contains('g7')) return 'rotate(45deg)';
+            if(element.classList.contains('g8')) return 'rotate(-5deg)';
+            if(element.classList.contains('g9')) return 'rotate(20deg)';
+            if(element.classList.contains('g10')) return 'rotate(-15deg)';
+            if(element.classList.contains('g11')) return 'rotate(30deg)';
+            if(element.classList.contains('g12')) return 'rotate(-5deg)';
+            if(element.classList.contains('g13')) return 'rotate(-15deg)';
+            if(element.classList.contains('g14')) return 'rotate(10deg)';
+            if(element.classList.contains('g15')) return 'rotate(2deg)';
+            if(element.classList.contains('g16')) return 'rotate(15deg)';
+            if(element.classList.contains('g17')) return 'rotate(-8deg)';
+            if(element.classList.contains('g18')) return 'rotate(25deg)';
+            if(element.classList.contains('g19')) return 'rotate(-20deg)';
+            if(element.classList.contains('g20')) return 'rotate(45deg)';
+            if(element.classList.contains('g21')) return 'rotate(12deg)';
+            if(element.classList.contains('g22')) return 'rotate(-30deg)';
+            return 'rotate(0deg)';
+        }
+
         function forceShowMouse() { document.body.style.cursor = 'pointer'; }
         function hideMouse() { if(window.innerWidth > 768) document.body.style.cursor = 'none'; }
 
