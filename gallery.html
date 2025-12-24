@@ -11,6 +11,7 @@
             --text-color: #e0e0e0;
             --font-stack: "Songti SC", "Noto Serif SC", "SimSun", serif;
             --accent-red: #cc2222;
+            --folder-color: #2a2a2a; /* 档案袋颜色 */
             --spotlight-size: 250px;
             --mouse-x: 50vw; 
             --mouse-y: 50vh;
@@ -38,7 +39,6 @@
             z-index: 0; pointer-events: none; overflow: hidden;
         }
 
-        /* 手绘网格层 */
         .sketch-grid {
             position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
             opacity: 0.15; z-index: -1;
@@ -51,7 +51,6 @@
         .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; z-index: 0; }
         .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.4; stroke-dasharray: 0; }
 
-        /* 背景元素基础样式 */
         .bg-clue {
             position: absolute;
             background: #f4f4f4; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
@@ -68,7 +67,7 @@
         .bg-clue.note { background: #fffff0; border: none; }
         .bg-clue.map { background: #dcdcdc; border: 2px solid #555; }
 
-        /* --- 电脑端布局 (g1-g32) --- */
+        /* --- 布局坐标 (保持之前的丰富度) --- */
         .g1 { top: 5%; left: 5%; width: 160px; height: 220px; transform: rotate(15deg); }
         .g2 { top: 10%; right: 8%; width: 190px; height: 160px; transform: rotate(-10deg); }
         .g3 { top: 35%; left: -2%; width: 140px; height: 170px; transform: rotate(-25deg); }
@@ -132,27 +131,50 @@
         .clue-card:hover .pin, .clue-card.mobile-active .pin { background-color: #cc2222; box-shadow: 0 0 15px #cc2222; }
         .note { margin-top: 20px; color: #222; font-family: "Courier New", monospace; font-size: 1.1rem; text-align: center; font-weight: bold; text-shadow: 0 1px 1px rgba(255,255,255,0.8); }
 
-        /* --- 🗺️ 地图入口卡片特效 --- */
+        /* --- 🔥 档案袋样式 (Guest Entry) --- */
+        .folder-look {
+            background-color: var(--folder-color);
+            border: 1px solid #444;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative;
+        }
+        /* 档案袋纹理 */
+        .folder-look::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: repeating-linear-gradient(45deg, #333 0, #333 1px, transparent 0, transparent 5px);
+            opacity: 0.1;
+        }
+        .folder-label {
+            font-family: "Courier New", monospace; color: #fff; font-size: 1.2rem; 
+            border: 2px solid #fff; padding: 5px 15px; margin-bottom: 10px;
+            letter-spacing: 2px; z-index: 2;
+        }
+        .secret-stamp {
+            position: absolute; top: 20px; right: 20px;
+            color: var(--accent-red); border: 3px double var(--accent-red); border-radius: 50%;
+            width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;
+            font-family: Impact, sans-serif; font-size: 0.8rem; letter-spacing: 1px;
+            transform: rotate(-20deg); opacity: 0.8; z-index: 2;
+        }
+        .folder-icon svg { width: 50px; height: 50px; stroke: #666; transition: stroke 0.3s; }
+        
+        #guest-entry-card:hover .folder-look, #guest-entry-card.mobile-active .folder-look { background-color: #222; }
+        #guest-entry-card:hover .folder-icon svg, #guest-entry-card.mobile-active .folder-icon svg { stroke: #fff; }
+        
+        /* --- 🗺️ 地图入口样式 --- */
         .target-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.3s;
-            pointer-events: none;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
         .reticle {
-            width: 60px; height: 60px;
-            border: 2px solid #cc2222; border-radius: 50%;
-            position: relative;
-            box-shadow: 0 0 15px #cc2222;
+            width: 60px; height: 60px; border: 2px solid #cc2222; border-radius: 50%;
+            position: relative; box-shadow: 0 0 15px #cc2222;
             transform: scale(1.5); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .reticle::before, .reticle::after {
-            content: ''; position: absolute; background: #cc2222;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
-        .reticle::before { width: 100%; height: 1px; }
-        .reticle::after { width: 1px; height: 100%; }
+        .reticle::before { content: ''; position: absolute; background: #cc2222; width: 100%; height: 1px; top: 50%; left: 0; }
+        .reticle::after { content: ''; position: absolute; background: #cc2222; width: 1px; height: 100%; left: 50%; top: 0; }
         .target-text {
             margin-top: 15px; font-family: "Courier New", monospace;
             color: #cc2222; font-weight: bold; letter-spacing: 2px; font-size: 0.9rem;
@@ -162,9 +184,8 @@
         #map-entry-card:hover .target-overlay, #map-entry-card.mobile-active .target-overlay { opacity: 1; }
         #map-entry-card:hover .reticle, #map-entry-card.mobile-active .reticle { transform: scale(1) rotate(90deg); }
         #map-entry-card:hover .target-text, #map-entry-card.mobile-active .target-text { transform: translateY(0); }
-        #map-entry-card:hover, #map-entry-card.mobile-active { box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 0 2px #cc2222 !important; }
 
-        /* 鼠标与连线 */
+        /* --- 6. 交互层 --- */
         .spotlight-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 100; background: radial-gradient(circle var(--spotlight-size) at var(--mouse-x) var(--mouse-y), transparent 0%, rgba(5, 5, 5, 0.98) 100%); will-change: background; }
         .magnifier-rim { position: fixed; top: 0; left: 0; width: calc(var(--spotlight-size) * 2); height: calc(var(--spotlight-size) * 2); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; pointer-events: none; z-index: 101; transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%)); box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1); }
         #connection-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
@@ -178,13 +199,11 @@
 
         @keyframes landIn { 0% { opacity: 0; transform: scale(1.2); filter: blur(8px); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
 
-        /* --- 7. 🔥 手机适配 (布局修正) --- */
+        /* --- 7. 🔥 手机适配 --- */
         @media (max-width: 768px) {
             body { cursor: auto; }
             .spotlight-overlay, .magnifier-rim { display: none; }
             .board-container { gap: 120px; padding-bottom: 120px; padding-top: 50px; }
-            
-            /* 卡片适配 */
             .clue-card { width: 75%; filter: brightness(0.9) grayscale(100%); padding: 15px 15px 20px 15px; }
             .photo-area { height: 200px; }
             .clue-card:nth-child(odd) { align-self: flex-start; margin-left: 20px; margin-right: 0; transform: rotate(-2deg); }
@@ -198,42 +217,28 @@
                 font-size: 0.9rem;
             }
 
-            /* 显示所有元素用于瀑布流 */
             .g23, .g24, .g25, .g26, .g27, .g28, .g29, .g30, .g31, .g32 { display: flex !important; }
 
-            /* --- 手机端精细化布局 (防堆叠) --- */
-            /* 1. 顶部区 (0-20%) */
+            /* 手机布局优化 */
             .g1 { width: 130px; height: 170px; top: -2%; left: -15%; transform: rotate(15deg); z-index: 0; }
             .g7 { width: 80px; height: 80px; top: 4%; right: 5%; transform: rotate(25deg); opacity: 0.9 !important; }
             .g16 { width: 70px; height: 70px; top: 12%; left: 60%; transform: rotate(-10deg); }
             .g11 { width: 90px; height: 90px; top: 22%; left: 2%; transform: rotate(5deg); display: flex !important; }
-
-            /* 2. 上半部过渡 (20-40%) */
             .g2 { width: 140px; height: 110px; top: 28%; right: -12%; transform: rotate(-8deg); }
             .g20 { width: 50px; height: 50px; top: 32%; left: 45%; transform: rotate(45deg); display: flex !important; opacity: 0.8; }
-            
-            /* 3. 中部核心区 (40-60%) */
             .g4 { width: 150px; height: 100px; top: 42%; right: -15%; transform: rotate(8deg); display: flex !important; }
             .g3 { width: 100px; height: 120px; top: 45%; left: -5%; transform: rotate(-12deg); display: flex !important; }
             .g12 { width: 110px; height: 140px; top: 48%; left: 30%; transform: rotate(5deg); opacity: 0.5 !important; z-index: -1; display: flex !important; }
-
-            /* 4. 下半部 (60-80%) */
             .g9 { width: 80px; height: 80px; top: 62%; left: 8%; transform: rotate(20deg); display: flex !important; }
             .g10 { width: 100px; height: 130px; top: 65%; right: 2%; transform: rotate(-15deg); display: flex !important; }
             .g22 { width: 60px; height: 60px; top: 72%; left: 45%; transform: rotate(-30deg); display: flex !important; }
-            
-            /* 5. 底部 (80-100%+) */
             .g5 { width: 120px; height: 160px; top: 92%; left: -2%; transform: rotate(10deg); }
             .g6 { width: 110px; height: 130px; top: 105%; right: 5%; transform: rotate(-8deg); }
             .g8 { width: 140px; height: 90px; top: 115%; left: 35%; transform: rotate(-5deg); opacity: 0.6 !important; }
-
-            /* 深层虚化装饰 */
             .g13 { width: 90px; height: 120px; top: 5%; left: 30%; opacity: 0.3 !important; filter: blur(2px); z-index: -2; }
             .g14 { top: 35%; right: 25%; width: 60px; height: 60px; opacity: 0.3 !important; filter: blur(2px); z-index: -2; }
             .g15 { width: 180px; height: 140px; top: 55%; left: 50%; transform: translate(-50%, 0) rotate(10deg); opacity: 0.2 !important; filter: blur(3px); z-index: -3; display: flex !important; }
             .g17, .g18, .g19, .g21 { opacity: 0.3 !important; filter: blur(2px) !important; z-index: -2; }
-
-            /* 底部新元素深层堆叠修复 */
             .g28 { width: 80px; height: 80px; top: 160%; left: 8%; transform: rotate(15deg); }
             .g29 { width: 100px; height: 140px; top: 165%; right: 5%; transform: rotate(-10deg); }
             .g30 { width: 120px; height: 90px; top: 175%; left: 25%; transform: rotate(5deg); }
@@ -287,7 +292,7 @@
             <div class="bg-clue map g13" data-speed="0.05">RIVER</div>
             <div class="bg-clue note g14" data-speed="0.4">NO!</div>
             <div class="bg-clue map g15" data-speed="0.02">MAP</div>
-            <div class="bg-clue note g16" data-speed="0.8">2026</div>
+            <div class="bg-clue note g16" data-speed="0.8">1998</div>
             <div class="bg-clue photo g17" data-speed="0.25">RUN</div>
             <div class="bg-clue note g18" data-speed="0.55">ZIP</div>
             <div class="bg-clue photo g19" data-speed="0.1">???</div>
@@ -311,19 +316,26 @@
         <header><h1>记忆线索</h1></header>
 
         <div class="board-container">
-            <div class="clue-card" id="card1">
+            <!-- 🔥 修改后的 Card 1：档案袋入口 -->
+            <div class="clue-card" id="guest-entry-card">
                 <div class="pin"></div>
-                <div class="photo-area">
-                    <img src="https://raw.githubusercontent.com/PikaQuC/shoujv.github.io/main/image/a999e19f47bcc427198ccc746f0b47eb.png" alt="证据1">
+                <div class="photo-area folder-look">
+                    <div class="secret-stamp">TOP SECRET</div>
+                    <div class="folder-label">PERSONNEL</div>
+                    <div class="folder-icon">
+                        <!-- User SVG Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
                 </div>
-                <div class="note">起点：2025</div>
+                <div class="note">档案：2024</div>
             </div>
-            <div class="clue-card" id="card2">
-                <div class="pin"></div>
-                <div class="photo-area"><img src="" alt="待填充"></div>
-                <div class="note">迷雾</div>
-            </div>
+
+            <div class="clue-card" id="card2"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">迷雾</div></div>
             
+            <!-- Card 3: 地图入口 -->
             <div class="clue-card" id="map-entry-card">
                 <div class="pin"></div>
                 <div class="photo-area">
@@ -336,15 +348,11 @@
                 <div class="note" style="color: #cc2222;">锁定坐标 ></div>
             </div>
 
-            <div class="clue-card" id="card4">
-                <div class="pin"></div>
-                <div class="photo-area"><img src="" alt="待填充"></div>
-                <div class="note">终点</div>
-            </div>
+            <div class="clue-card" id="card4"><div class="pin"></div><div class="photo-area"><img src="" alt="待填充"></div><div class="note">终点</div></div>
         </div>
 
         <div class="footer-nav">
-            <a href="index.html" class="ghost-btn" onmouseover="forceShowMouse()" onmouseout="hideMouse()">
+            <a href="index.html" class="ghost-btn">
                 <span>返回倒计时</span>
                 <span class="arrow-wrapper">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -367,7 +375,7 @@
             setTimeout(() => { window.location.href = this.href; }, 800);
         });
 
-        // 手电筒
+        // 电脑端手电筒
         document.addEventListener('mousemove', (e) => {
             if (window.innerWidth > 768) {
                 root.style.setProperty('--mouse-x', e.clientX + 'px');
@@ -375,12 +383,12 @@
             }
         });
 
-        // 手机端卡片点亮交互
+        // 手机端交互
         const cards = document.querySelectorAll('.clue-card');
         cards.forEach(card => {
             card.addEventListener('click', (e) => {
-                // 如果是地图卡片，它的点击由下面的专用逻辑处理
-                if(card.id === 'map-entry-card') return; 
+                // 特殊卡片逻辑单独处理
+                if(card.id === 'map-entry-card' || card.id === 'guest-entry-card') return; 
 
                 e.stopPropagation();
                 const isActive = card.classList.contains('mobile-active');
@@ -392,12 +400,12 @@
             cards.forEach(c => c.classList.remove('mobile-active'));
         });
 
-        // 连线逻辑
+        // 连线
         function drawConnections() {
             const svg = document.getElementById('connection-layer');
             svg.style.height = document.body.scrollHeight + 'px';
             svg.innerHTML = '';
-            const ids = ['card1', 'card2', 'map-entry-card', 'card4'];
+            const ids = ['guest-entry-card', 'card2', 'map-entry-card', 'card4'];
             for (let i = 0; i < ids.length - 1; i++) {
                 const el1 = document.getElementById(ids[i]);
                 const el2 = document.getElementById(ids[i+1]);
@@ -417,7 +425,7 @@
             }
         }
 
-        // 背景防抖初始化
+        // 背景防抖
         const bgClues = document.querySelectorAll('.bg-clue');
         bgClues.forEach(clue => {
             const randomAngle = Math.random() * 20 - 10; 
@@ -429,7 +437,6 @@
             clue.dataset.angle = finalAngle;
         });
 
-        // 滚动视差
         let isScrolling = false;
         window.addEventListener('scroll', () => {
             if (!isScrolling) {
@@ -454,32 +461,43 @@
         function forceShowMouse() { document.body.style.cursor = 'pointer'; }
         function hideMouse() { if(window.innerWidth > 768) document.body.style.cursor = 'none'; }
 
-        // --- 🔥 地图跳转逻辑 ---
+        // --- 🔥 1. 地图跳转逻辑 ---
         const mapCard = document.getElementById('map-entry-card');
         mapCard.addEventListener('click', function(e) {
             const isMobile = window.innerWidth <= 768;
             const isActive = this.classList.contains('mobile-active');
-
             if (isMobile && !isActive) {
-                // 手机端：第一次点，先激活高亮和瞄准镜
                 e.stopPropagation();
                 cards.forEach(c => c.classList.remove('mobile-active'));
                 this.classList.add('mobile-active');
                 return; 
             }
-
-            // 电脑端直接跳转，或手机端已激活时跳转
-            e.preventDefault();
-            e.stopPropagation();
-
+            e.preventDefault(); e.stopPropagation();
             this.style.transform = 'scale(5) rotate(0deg)';
             this.style.zIndex = '999';
             this.style.transition = 'all 0.8s ease-in';
             document.body.classList.add('is-exiting');
+            setTimeout(() => { window.location.href = 'map.html'; }, 700);
+        });
 
-            setTimeout(() => {
-                window.location.href = 'map.html';
-            }, 700);
+        // --- 🔥 2. 档案袋(嘉宾)跳转逻辑 ---
+        const guestCard = document.getElementById('guest-entry-card');
+        guestCard.addEventListener('click', function(e) {
+            const isMobile = window.innerWidth <= 768;
+            const isActive = this.classList.contains('mobile-active');
+            if (isMobile && !isActive) {
+                e.stopPropagation();
+                cards.forEach(c => c.classList.remove('mobile-active'));
+                this.classList.add('mobile-active');
+                return;
+            }
+            e.preventDefault(); e.stopPropagation();
+            // 不同的转场特效：向上滑出
+            this.style.transform = 'translateY(-100px) scale(1.1)';
+            this.style.opacity = '0';
+            this.style.transition = 'all 0.6s ease-in';
+            document.body.classList.add('is-exiting');
+            setTimeout(() => { window.location.href = 'guests.html'; }, 700);
         });
 
         window.addEventListener('load', () => {
@@ -490,3 +508,4 @@
     </script>
 </body>
 </html>
+
