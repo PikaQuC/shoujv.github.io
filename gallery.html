@@ -11,7 +11,7 @@
             --text-color: #e0e0e0;
             --font-stack: "Songti SC", "Noto Serif SC", "SimSun", serif;
             --accent-red: #cc2222;
-            --folder-color: #2a2a2a; /* 档案袋颜色 */
+            --folder-color: #2a2a2a; 
             --spotlight-size: 250px;
             --mouse-x: 50vw; 
             --mouse-y: 50vh;
@@ -33,7 +33,7 @@
             transform: scale(0.6) translateZ(-500px); opacity: 0; filter: blur(10px);
         }
 
-        /* --- 2. 背景层 (Fixed) --- */
+        /* --- 2. 背景层 --- */
         .layer-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none; overflow: hidden;
@@ -67,7 +67,7 @@
         .bg-clue.note { background: #fffff0; border: none; }
         .bg-clue.map { background: #dcdcdc; border: 2px solid #555; }
 
-        /* --- 布局坐标 (保持之前的丰富度) --- */
+        /* 布局坐标 */
         .g1 { top: 5%; left: 5%; width: 160px; height: 220px; transform: rotate(15deg); }
         .g2 { top: 10%; right: 8%; width: 190px; height: 160px; transform: rotate(-10deg); }
         .g3 { top: 35%; left: -2%; width: 140px; height: 170px; transform: rotate(-25deg); }
@@ -131,14 +131,13 @@
         .clue-card:hover .pin, .clue-card.mobile-active .pin { background-color: #cc2222; box-shadow: 0 0 15px #cc2222; }
         .note { margin-top: 20px; color: #222; font-family: "Courier New", monospace; font-size: 1.1rem; text-align: center; font-weight: bold; text-shadow: 0 1px 1px rgba(255,255,255,0.8); }
 
-        /* --- 🔥 档案袋样式 (Guest Entry) --- */
+        /* --- 档案袋样式 --- */
         .folder-look {
             background-color: var(--folder-color);
             border: 1px solid #444;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             position: relative;
         }
-        /* 档案袋纹理 */
         .folder-look::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-image: repeating-linear-gradient(45deg, #333 0, #333 1px, transparent 0, transparent 5px);
@@ -161,7 +160,7 @@
         #guest-entry-card:hover .folder-look, #guest-entry-card.mobile-active .folder-look { background-color: #222; }
         #guest-entry-card:hover .folder-icon svg, #guest-entry-card.mobile-active .folder-icon svg { stroke: #fff; }
         
-        /* --- 🗺️ 地图入口样式 --- */
+        /* --- 地图入口样式 --- */
         .target-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6);
@@ -219,7 +218,6 @@
 
             .g23, .g24, .g25, .g26, .g27, .g28, .g29, .g30, .g31, .g32 { display: flex !important; }
 
-            /* 手机布局优化 */
             .g1 { width: 130px; height: 170px; top: -2%; left: -15%; transform: rotate(15deg); z-index: 0; }
             .g7 { width: 80px; height: 80px; top: 4%; right: 5%; transform: rotate(25deg); opacity: 0.9 !important; }
             .g16 { width: 70px; height: 70px; top: 12%; left: 60%; transform: rotate(-10deg); }
@@ -302,7 +300,7 @@
             <div class="bg-clue photo g23" data-speed="0.4">FILE</div>
             <div class="bg-clue note g24" data-speed="0.2">XX</div>
             <div class="bg-clue map g25" data-speed="0.1">AREA</div>
-            <div class="bg-clue photo g26" data-speed="0.6">PHOTO</div>
+            <div class="bg-clue photo g26" data-speed="0.6">CIA</div>
             <div class="bg-clue note g27" data-speed="0.3">!!!</div>
             <div class="bg-clue note g28" data-speed="0.5">WHY</div>
             <div class="bg-clue photo g29" data-speed="0.2">99%</div>
@@ -316,14 +314,13 @@
         <header><h1>记忆线索</h1></header>
 
         <div class="board-container">
-            <!-- 🔥 修改后的 Card 1：档案袋入口 -->
+            <!-- 🔥 Card 1: 档案袋入口 -->
             <div class="clue-card" id="guest-entry-card">
                 <div class="pin"></div>
                 <div class="photo-area folder-look">
                     <div class="secret-stamp">TOP SECRET</div>
                     <div class="folder-label">PERSONNEL</div>
                     <div class="folder-icon">
-                        <!-- User SVG Icon -->
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
@@ -368,14 +365,12 @@
         const root = document.documentElement;
         const linkBtn = document.querySelector('.ghost-btn');
 
-        // 返回首页
         linkBtn.addEventListener('click', function(e) {
             e.preventDefault();
             document.body.classList.add('is-exiting');
             setTimeout(() => { window.location.href = this.href; }, 800);
         });
 
-        // 电脑端手电筒
         document.addEventListener('mousemove', (e) => {
             if (window.innerWidth > 768) {
                 root.style.setProperty('--mouse-x', e.clientX + 'px');
@@ -383,13 +378,10 @@
             }
         });
 
-        // 手机端交互
         const cards = document.querySelectorAll('.clue-card');
         cards.forEach(card => {
             card.addEventListener('click', (e) => {
-                // 特殊卡片逻辑单独处理
                 if(card.id === 'map-entry-card' || card.id === 'guest-entry-card') return; 
-
                 e.stopPropagation();
                 const isActive = card.classList.contains('mobile-active');
                 cards.forEach(c => c.classList.remove('mobile-active'));
@@ -400,7 +392,6 @@
             cards.forEach(c => c.classList.remove('mobile-active'));
         });
 
-        // 连线
         function drawConnections() {
             const svg = document.getElementById('connection-layer');
             svg.style.height = document.body.scrollHeight + 'px';
@@ -425,7 +416,6 @@
             }
         }
 
-        // 背景防抖
         const bgClues = document.querySelectorAll('.bg-clue');
         bgClues.forEach(clue => {
             const randomAngle = Math.random() * 20 - 10; 
@@ -461,17 +451,9 @@
         function forceShowMouse() { document.body.style.cursor = 'pointer'; }
         function hideMouse() { if(window.innerWidth > 768) document.body.style.cursor = 'none'; }
 
-        // --- 🔥 1. 地图跳转逻辑 ---
+        // --- 🔥 1. 地图跳转 ---
         const mapCard = document.getElementById('map-entry-card');
         mapCard.addEventListener('click', function(e) {
-            const isMobile = window.innerWidth <= 768;
-            const isActive = this.classList.contains('mobile-active');
-            if (isMobile && !isActive) {
-                e.stopPropagation();
-                cards.forEach(c => c.classList.remove('mobile-active'));
-                this.classList.add('mobile-active');
-                return; 
-            }
             e.preventDefault(); e.stopPropagation();
             this.style.transform = 'scale(5) rotate(0deg)';
             this.style.zIndex = '999';
@@ -480,19 +462,10 @@
             setTimeout(() => { window.location.href = 'map.html'; }, 700);
         });
 
-        // --- 🔥 2. 档案袋(嘉宾)跳转逻辑 ---
+        // --- 🔥 2. 档案袋跳转 ---
         const guestCard = document.getElementById('guest-entry-card');
         guestCard.addEventListener('click', function(e) {
-            const isMobile = window.innerWidth <= 768;
-            const isActive = this.classList.contains('mobile-active');
-            if (isMobile && !isActive) {
-                e.stopPropagation();
-                cards.forEach(c => c.classList.remove('mobile-active'));
-                this.classList.add('mobile-active');
-                return;
-            }
             e.preventDefault(); e.stopPropagation();
-            // 不同的转场特效：向上滑出
             this.style.transform = 'translateY(-100px) scale(1.1)';
             this.style.opacity = '0';
             this.style.transition = 'all 0.6s ease-in';
@@ -508,4 +481,5 @@
     </script>
 </body>
 </html>
+
 
