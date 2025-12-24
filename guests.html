@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>人物 | 档案</title>
+    <style>
+        /* --- 1. 全局设置 --- */
+        :root {
+            --bg-color: #050505;
+            --text-color: #e0e0e0;
+            --font-stack: "Songti SC", "Noto Serif SC", "SimSun", serif;
+            --mono-font: "Courier New", monospace;
+            --accent-red: #cc2222;
+            --spotlight-size: 250px;
+            --mouse-x: 50vw; 
+            --mouse-y: 50vh;
+        }
+
+        body {
+            margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            font-family: var(--font-stack); overflow-x: hidden;
+            cursor: none; min-height: 100vh;
+        }
+
+        #main-wrapper {
+            position: relative; z-index: 10; width: 100%;
+            animation: slideUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        body.is-exiting #main-wrapper {
+            transition: all 0.8s ease-in;
+            transform: translateY(50px); opacity: 0; filter: blur(10px);
+        }
+
+        /* --- 2. 背景层 (固定定位，视差基础) --- */
+        .layer-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none; overflow: hidden;
+        }
+
+        /* 手绘网格 */
+        .sketch-grid {
+            position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+            opacity: 0.1; z-index: -2;
+        }
+        .grid-line {
+            stroke: rgba(255, 255, 255, 0.3); stroke-width: 0.5; stroke-linecap: round;
+            stroke-dasharray: 100% 0; 
+        }
+
+        /* 红线网 */
+        .string-web { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; z-index: -1; }
+        .web-line { stroke: var(--accent-red); stroke-width: 0.8; opacity: 0.4; stroke-dasharray: 0; }
+
+        /* 扫描线 */
+        .scan-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            animation: scan 8s linear infinite; opacity: 0.2; z-index: 1;
+        }
+
+        /* 背景碎片 (情报网核心) */
+        .bg-clue {
+            position: absolute;
+            background: #f4f4f4; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            filter: grayscale(100%) brightness(0.2) contrast(1.2) blur(1px); /* 默认很暗，作为背景 */
+            border: 1px solid #333;
+            display: flex; justify-content: center; align-items: center;
+            font-family: var(--mono-font); color: #111; font-weight: bold;
+            font-size: 0.7rem; overflow: hidden;
+            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            will-change: transform; 
+        }
+        .bg-clue.photo::after { content: ''; position: absolute; top: 5%; left: 5%; width: 90%; height: 75%; background: #222; opacity: 0.3; }
+        .bg-clue.note { background: #fffff0; border: none; }
+        .bg-clue.map { background: #dcdcdc; border: 2px solid #555; }
+
+        /* --- 碎片布局 (复用Gallery的强大布局) --- */
+        .g1 { top: 5%; left: 5%; width: 160px; height: 220px; transform: rotate(15deg); }
+        .g2 { top: 10%; right: 8%; width: 190px; height: 160px; transform: rotate(-10deg); }
+        .g3 { top: 35%; left: -2%; width: 140px; height: 170px; transform: rotate(-25deg); }
+        .g4 { top: 30%; right: -2%; width: 220px; height: 140px; transform: rotate(5deg); }
+        .g5 { bottom: 15%; left: 8%; width: 170px; height: 230px; transform: rotate(8deg); }
+        .g6 { bottom: 10%; right: 5%; width: 160px; height: 190px; transform: rotate(-12deg); }
+        .g7 { top: 2%; left: 40%; width: 130px; height: 130px; transform: rotate(45deg); opacity: 0.5; }
+        .g8 { bottom: 2%; right: 40%; width: 240px; height: 160px; transform: rotate(-5deg); opacity: 0.5; }
+        .g9 { top: 55%; left: 15%; width: 100px; height: 100px; transform: rotate(20deg); }
+        .g10 { top: 50%; right: 15%; width: 110px; height: 140px; transform: rotate(-15deg); }
+        .g11 { top: 20%; left: 25%; width: 130px; height: 130px; transform: rotate(30deg); }
+        .g12 { top: 25%; right: 25%; width: 140px; height: 190px; transform: rotate(-5deg); }
+        .g13 { bottom: 40%; left: 10%; width: 160px; height: 130px; transform: rotate(-15deg); }
+        .g14 { bottom: 35%; right: 12%; width: 110px; height: 110px; transform: rotate(10deg); }
+        .g15 { top: 45%; left: 50%; width: 250px; height: 190px; transform: translate(-50%, -50%) rotate(2deg); opacity: 0.3; filter: blur(3px) !important; z-index: -1; }
+        .g16 { top: 5%; left: 60%; width: 80px; height: 80px; transform: rotate(15deg); }
+        .g17 { bottom: 5%; left: 25%; width: 190px; height: 140px; transform: rotate(-8deg); }
+        .g18 { top: 70%; right: 5%; width: 100px; height: 160px; transform: rotate(25deg); }
+        .g19 { top: 80%; left: -5%; width: 170px; height: 130px; transform: rotate(-20deg); }
+        .g20 { top: 15%; left: 50%; width: 70px; height: 70px; transform: rotate(45deg); }
+        .g21 { bottom: 25%; right: 35%; width: 130px; height: 170px; transform: rotate(12deg); }
+        .g22 { top: 60%; left: 80%; width: 90px; height: 90px; transform: rotate(-30deg); }
+        /* 电脑端隐藏过多的点缀，防止抢主角 */
+        .g23, .g24, .g25, .g26, .g27, .g28, .g29, .g30, .g31, .g32 { display: none; } 
+
+        /* --- 3. 头部 --- */
+        header { padding: 80px 20px 40px; text-align: center; position: relative; z-index: 10; }
+        h1 { 
+            font-size: 2rem; letter-spacing: 0.3em; font-weight: 300; margin-bottom: 10px; opacity: 0.9;
+            text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 5px rgba(255,255,255,0.1);
+        }
+        .subtitle {
+            font-family: var(--mono-font); font-size: 0.8rem; color: #666; letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+        .subtitle::before, .subtitle::after { content: '-'; margin: 0 10px; color: var(--accent-red); }
+
+        /* --- 4. 档案卡片容器 --- */
+        .files-container {
+            position: relative; z-index: 5;
+            max-width: 1200px; margin: 0 auto; padding: 20px 20px 150px;
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 60px;
+            perspective: 1000px;
+        }
+
+        /* 📁 单个档案卡 */
+        .dossier-card {
+            position: relative;
+            background: #111;
+            border: 1px solid #333;
+            padding: 20px;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-style: preserve-3d;
+            cursor: pointer;
+            overflow: hidden;
+            /* 默认暗一点 */
+            filter: brightness(0.8);
+        }
+
+        .dossier-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: repeating-linear-gradient(45deg, #222 0, #222 1px, transparent 0, transparent 50%);
+            background-size: 10px 10px; opacity: 0.1; pointer-events: none; z-index: 0;
+        }
+
+        .top-secret-strip {
+            position: absolute; top: 10px; left: -30px; width: 100px; height: 20px;
+            background: var(--accent-red); color: #000;
+            font-family: var(--mono-font); font-weight: bold; font-size: 0.6rem;
+            text-align: center; line-height: 20px;
+            transform: rotate(-45deg); box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+
+        .mugshot-box {
+            width: 100%; height: 250px;
+            background: #000; border: 1px solid #444;
+            margin-bottom: 20px; position: relative; overflow: hidden;
+        }
+        .mugshot-img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: grayscale(100%) contrast(1.2) brightness(0.8);
+            transition: filter 0.5s, transform 0.5s;
+        }
+        .mugshot-box::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+
+        .info-block { position: relative; z-index: 1; font-family: var(--mono-font); }
+        
+        .guest-name {
+            font-size: 1.4rem; color: #fff; margin-bottom: 5px;
+            text-transform: uppercase; letter-spacing: 2px;
+            border-bottom: 1px solid #444; padding-bottom: 10px; display: inline-block;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+        
+        .guest-role {
+            color: var(--accent-red); font-size: 0.8rem; margin-bottom: 15px;
+            font-weight: bold; letter-spacing: 1px;
+        }
+
+        .guest-desc {
+            font-size: 0.8rem; line-height: 1.6; color: #888;
+            opacity: 0.7; transition: opacity 0.3s;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .stamp {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 80px; height: 80px;
+            border: 3px double var(--accent-red); border-radius: 50%;
+            color: var(--accent-red); display: flex; justify-content: center; align-items: center;
+            font-family: Impact, sans-serif; letter-spacing: 2px;
+            font-size: 0.8rem; transform: rotate(-20deg) scale(2);
+            opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* 悬停/激活 */
+        .dossier-card:hover, .dossier-card.mobile-active {
+            border-color: #666; transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.9);
+            filter: brightness(1); /* 变亮 */
+            z-index: 20;
+        }
+        
+        .dossier-card:hover .mugshot-img, .dossier-card.mobile-active .mugshot-img {
+            filter: grayscale(0%) contrast(1) brightness(1); transform: scale(1.05);
+        }
+
+        .dossier-card:hover .stamp, .dossier-card.mobile-active .stamp {
+            opacity: 0.8; transform: rotate(-20deg) scale(1);
+        }
+
+        .dossier-card:hover .guest-desc, .dossier-card.mobile-active .guest-desc {
+            opacity: 1; color: #bbb;
+        }
+
+        /* --- 5. 底部按钮 --- */
+        .footer-nav { position: fixed; bottom: 40px; left: 0; width: 100%; text-align: center; z-index: 120; pointer-events: none; }
+        .ghost-btn { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.6); text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); transition: all 0.5s; cursor: pointer; flex-direction: row-reverse; }
+        .ghost-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .arrow-wrapper { width: 0; overflow: hidden; opacity: 0; transform: translateX(5px); transition: 0.4s; display: flex; align-items: center; }
+        .ghost-btn:hover .arrow-wrapper { width: 16px; margin-right: 10px; opacity: 1; transform: translateX(0); }
+
+        /* --- 6. 交互层 --- */
+        .spotlight-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 100; background: radial-gradient(circle var(--spotlight-size) at var(--mouse-x) var(--mouse-y), transparent 0%, rgba(5, 5, 5, 0.98) 100%); will-change: background; }
+        .magnifier-rim { position: fixed; top: 0; left: 0; width: calc(var(--spotlight-size) * 2); height: calc(var(--spotlight-size) * 2); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; pointer-events: none; z-index: 101; transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%)); box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.1); }
+
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 0.3; } 90% { opacity: 0.3; } 100% { top: 100%; opacity: 0; } }
+
+        /* --- 7. 手机适配 --- */
+        @media (max-width: 768px) {
+            body { cursor: auto; }
+            .spotlight-overlay, .magnifier-rim { display: none; }
+            .files-container { grid-template-columns: 1fr; padding: 0 30px 100px; gap: 40px; }
+            .guest-desc { opacity: 0.8; -webkit-line-clamp: 2; }
+            .mugshot-img { filter: grayscale(100%) contrast(1) brightness(0.9); }
+            
+            /* 背景可见性调整 */
+            .bg-clue { opacity: 0.8 !important; filter: grayscale(100%) brightness(0.7) contrast(1.0) blur(0px) !important; }
+            
+            /* 手机端瀑布流布局 (加长背景) */
+            .g1 { width: 140px; height: 180px; top: 2%; left: -8%; transform: rotate(10deg); }
+            .g7 { width: 90px; height: 90px; top: 5%; right: 10%; transform: rotate(25deg); opacity: 0.9 !important; }
+            .g16 { width: 80px; height: 80px; top: 8%; left: 40%; transform: rotate(-10deg); }
+            .g2 { width: 130px; height: 100px; top: 25%; right: -5%; transform: rotate(-8deg); }
+            .g11 { width: 100px; height: 100px; top: 30%; left: 5%; transform: rotate(15deg); }
+            .g20 { width: 60px; height: 60px; top: 35%; right: 40%; transform: rotate(45deg); }
+            .g4 { width: 150px; height: 100px; top: 40%; right: -10%; transform: rotate(5deg); }
+            .g3 { width: 110px; height: 130px; top: 55%; left: -8%; transform: rotate(-15deg); }
+            .g12 { width: 120px; height: 150px; top: 60%; left: 35%; transform: rotate(8deg); opacity: 0.6 !important; }
+            .g9 { width: 80px; height: 80px; top: 65%; left: 10%; transform: rotate(20deg); }
+            .g10 { width: 110px; height: 140px; top: 70%; right: 5%; transform: rotate(-15deg); }
+            .g22 { width: 70px; height: 70px; top: 85%; left: 50%; transform: rotate(-30deg); }
+            
+            /* 更多底部元素用于滚动 */
+            .g23, .g24, .g25, .g26, .g27, .g28, .g29, .g30, .g31, .g32 { display: flex !important; }
+            .g23 { position: absolute; width: 100px; height: 140px; top: 120%; left: -5%; transform: rotate(12deg); }
+            .g24 { position: absolute; width: 80px; height: 80px; top: 125%; right: 20%; transform: rotate(-20deg); }
+            .g25 { position: absolute; width: 140px; height: 100px; top: 135%; left: 40%; transform: rotate(5deg); opacity: 0.5 !important; }
+            .g26 { position: absolute; width: 110px; height: 160px; top: 145%; right: -5%; transform: rotate(-10deg); }
+            .g27 { position: absolute; width: 90px; height: 90px; top: 150%; left: 10%; transform: rotate(30deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="spotlight-overlay"></div>
+    <div class="magnifier-rim"></div>
+
+    <div id="main-wrapper">
+        
+        <!-- 背景层：庞大的线索网 -->
+        <div class="layer-bg">
+            <!-- 手绘网格 -->
+            <svg class="sketch-grid">
+                <line x1="-5%" y1="12%" x2="105%" y2="15%" class="grid-line"></line>
+                <line x1="0%" y1="28%" x2="100%" y2="26%" class="grid-line"></line>
+                <line x1="-2%" y1="45%" x2="102%" y2="48%" class="grid-line"></line>
+                <line x1="0%" y1="62%" x2="100%" y2="60%" class="grid-line"></line>
+                <line x1="-5%" y1="78%" x2="105%" y2="82%" class="grid-line"></line>
+                <line x1="0%" y1="92%" x2="100%" y2="90%" class="grid-line"></line>
+                <line x1="12%" y1="-5%" x2="15%" y2="105%" class="grid-line"></line>
+                <line x1="28%" y1="0%" x2="26%" y2="100%" class="grid-line"></line>
+                <line x1="45%" y1="-2%" x2="48%" y2="102%" class="grid-line"></line>
+                <line x1="62%" y1="0%" x2="60%" y2="100%" class="grid-line"></line>
+                <line x1="78%" y1="-5%" x2="82%" y2="105%" class="grid-line"></line>
+                <line x1="92%" y1="0%" x2="90%" y2="100%" class="grid-line"></line>
+            </svg>
+
+            <!-- 红线 -->
+            <svg class="string-web">
+                <line x1="0%" y1="10%" x2="100%" y2="20%" class="web-line"></line>
+                <line x1="80%" y1="0%" x2="90%" y2="100%" class="web-line"></line>
+                <line x1="20%" y1="0%" x2="10%" y2="100%" class="web-line"></line>
+                <line x1="0%" y1="80%" x2="100%" y2="90%" class="web-line"></line>
+                <line x1="50%" y1="0%" x2="60%" y2="100%" class="web-line"></line>
+            </svg>
+
+            <!-- 32个背景碎片 (特工主题) -->
+            <div class="bg-clue photo g1" data-speed="0.2">SUSPECT</div>
+            <div class="bg-clue note g2" data-speed="0.5">???</div>
+            <div class="bg-clue photo g3" data-speed="0.1">OLD</div>
+            <div class="bg-clue photo g4" data-speed="0.6">KEY</div>
+            <div class="bg-clue note g5" data-speed="0.3">LOC</div>
+            <div class="bg-clue photo g6" data-speed="0.4">TARGET</div>
+            <div class="bg-clue note g7" data-speed="0.7">!</div>
+            <div class="bg-clue note g8" data-speed="0.2">PLAN</div>
+            <div class="bg-clue photo g9" data-speed="0.5">X</div>
+            <div class="bg-clue photo g10" data-speed="0.3">9527</div>
+            <div class="bg-clue note g11" data-speed="0.6">WHO?</div>
+            <div class="bg-clue photo g12" data-speed="0.15">EYE</div>
+            <div class="bg-clue map g13" data-speed="0.05">CITY</div>
+            <div class="bg-clue note g14" data-speed="0.4">NO!</div>
+            <div class="bg-clue map g15" data-speed="0.02">MAP</div>
+            <div class="bg-clue note g16" data-speed="0.8">1998</div>
+            <div class="bg-clue photo g17" data-speed="0.25">RUN</div>
+            <div class="bg-clue note g18" data-speed="0.55">ZIP</div>
+            <div class="bg-clue photo g19" data-speed="0.1">???</div>
+            <div class="bg-clue note g20" data-speed="0.9">A</div>
+            <div class="bg-clue photo g21" data-speed="0.2">LOST</div>
+            <div class="bg-clue note g22" data-speed="0.7">FOUND</div>
+            
+            <!-- 底部补充元素 -->
+            <div class="bg-clue photo g23" data-speed="0.4">FILE</div>
+            <div class="bg-clue note g24" data-speed="0.2">XX</div>
+            <div class="bg-clue map g25" data-speed="0.1">AREA</div>
+            <div class="bg-clue photo g26" data-speed="0.6">CIA</div>
+            <div class="bg-clue note g27" data-speed="0.3">!!!</div>
+            <div class="bg-clue note g28" data-speed="0.5">WHY</div>
+            <div class="bg-clue photo g29" data-speed="0.2">99%</div>
+            <div class="bg-clue map g30" data-speed="0.05">ROAD</div>
+            <div class="bg-clue note g31" data-speed="0.8">HELP</div>
+            <div class="bg-clue photo g32" data-speed="0.3">END</div>
+        </div>
+
+        <header>
+            <h1>关键人物档案</h1>
+            <div class="subtitle">Classified Personnel Database</div>
+        </header>
+
+        <!-- 档案列表 -->
+        <div class="files-container">
+            <!-- 嘉宾 1 -->
+            <div class="dossier-card">
+                <div class="top-secret-strip">SECRET</div>
+                <div class="mugshot-box">
+                    <img src="https://raw.githubusercontent.com/PikaQuC/shoujv.github.io/main/image/a999e19f47bcc427198ccc746f0b47eb.png" class="mugshot-img">
+                </div>
+                <div class="info-block">
+                    <div class="guest-name">AGENT. ZHANG</div>
+                    <div class="guest-role">发起人 / THE ORGANIZER</div>
+                    <div class="guest-desc">
+                        档案编号：9527。最后一次出现在武汉市中心。擅长解密与布局，是本次行动的核心策划者。目前状态：活跃。
+                    </div>
+                </div>
+                <div class="stamp">VERIFIED</div>
+            </div>
+
+            <!-- 嘉宾 2 -->
+            <div class="dossier-card">
+                <div class="top-secret-strip">TOP SECRET</div>
+                <div class="mugshot-box">
+                    <img src="" alt="NO PHOTO" class="mugshot-img" style="background: #222;">
+                </div>
+                <div class="info-block">
+                    <div class="guest-name">UNKNOWN</div>
+                    <div class="guest-role">特邀嘉宾 / SPECIAL GUEST</div>
+                    <div class="guest-desc">
+                        身份不明。代号“影子”。掌握着关于 2026 年关键时间点的重要情报。接触时需保持极度谨慎。
+                    </div>
+                </div>
+                <div class="stamp">PENDING</div>
+            </div>
+
+            <!-- 嘉宾 3 -->
+            <div class="dossier-card">
+                <div class="top-secret-strip">CONFIDENTIAL</div>
+                <div class="mugshot-box">
+                    <img src="" alt="NO PHOTO" class="mugshot-img" style="background: #222;">
+                </div>
+                <div class="info-block">
+                    <div class="guest-name">OPERATOR X</div>
+                    <div class="guest-role">联络员 / THE LIASION</div>
+                    <div class="guest-desc">
+                        负责情报传递与后勤支援。常出没于半盏诗小酒馆附近。随身携带加密通讯设备。
+                    </div>
+                </div>
+                <div class="stamp">ACTIVE</div>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <a href="index.html" class="ghost-btn">
+                <span>返回大厅</span>
+                <span class="arrow-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </span>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        const root = document.documentElement;
+        const linkBtn = document.querySelector('.ghost-btn');
+
+        // 跳转
+        linkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.add('is-exiting');
+            setTimeout(() => { window.location.href = this.href; }, 800);
+        });
+
+        // 电脑端手电筒
+        document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth > 768) {
+                root.style.setProperty('--mouse-x', e.clientX + 'px');
+                root.style.setProperty('--mouse-y', e.clientY + 'px');
+            }
+        });
+
+        // 手机端交互 (点击盖章)
+        const cards = document.querySelectorAll('.dossier-card');
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isActive = card.classList.contains('mobile-active');
+                cards.forEach(c => c.classList.remove('mobile-active'));
+                if (!isActive) card.classList.add('mobile-active');
+            });
+        });
+        document.addEventListener('click', () => {
+            cards.forEach(c => c.classList.remove('mobile-active'));
+        });
+
+        // 背景视差 (防抖版)
+        const bgClues = document.querySelectorAll('.bg-clue');
+        // 初始化角度
+        bgClues.forEach(clue => {
+            const randomAngle = Math.random() * 20 - 10; 
+            let finalAngle = randomAngle;
+            if(clue.classList.contains('g1')) finalAngle = 15;
+            if(clue.classList.contains('g3')) finalAngle = -25;
+            if(clue.classList.contains('g7')) finalAngle = 45;
+            clue.dataset.angle = finalAngle;
+        });
+
+        let isScrolling = false;
+        window.addEventListener('scroll', () => {
+            if (!isScrolling) {
+                window.requestAnimationFrame(() => {
+                    updateParallax();
+                    isScrolling = false;
+                });
+                isScrolling = true;
+            }
+        });
+
+        function updateParallax() {
+            const scrollY = window.scrollY;
+            bgClues.forEach(clue => {
+                const speed = parseFloat(clue.getAttribute('data-speed')) || 0.2;
+                const yPos = scrollY * speed * -0.5;
+                const angle = clue.dataset.angle;
+                clue.style.transform = `translate3d(0, ${yPos}px, 0) rotate(${angle}deg)`;
+            });
+        }
+
+        // 初始化
+        updateParallax();
+    </script>
+</body>
+</html>
